@@ -1,30 +1,25 @@
-import { Geist, Geist_Mono } from "next/font/google"
+import type { Metadata } from "next";
+import { Inter, Manrope } from "next/font/google";
+import "./globals.css";
 
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'})
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
+export const metadata: Metadata = {
+  title: "HomeFix — Expert repairs. Trusted technicians.",
+  description:
+    "Book reliable professionals for your home appliances, electrical and plumbing needs.",
+};
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
-    >
-      <body>
-        <ThemeProvider>{children}</ThemeProvider>
+    <html lang="en" className={`${inter.variable} ${manrope.variable}`}>
+      {/* inter.className sets font-family directly, so it works regardless of Tailwind font config */}
+      <body className={`${inter.className} bg-ivory text-ink antialiased`}>
+        {children}
       </body>
     </html>
-  )
+  );
 }

@@ -1,0 +1,114 @@
+/* ==========================================================================
+   HomeFix — Sage & Ivory palette
+   SINGLE SOURCE OF TRUTH for every color in the app.
+   Change a hex here and the whole site (and all shadcn components) follows.
+   ========================================================================== */
+
+:root {
+  /* ---- Brand palette (raw values) ---- */
+  --forest: #263a32;        /* Primary / Deep Forest Green */
+  --sage: #789b86;          /* Secondary / Sage Green */
+  --muted-sage: #729b83;    /* Accent / Muted Sage */
+  --ivory: #f4f5f0;         /* Main background (confirmed by user) */
+  --surface: #ffffff;       /* Inputs, forms, floating chips */
+  --card-tint: #edeee8;     /* Cards / tiles (sampled from the Sage & Ivory Sanctuary board) */
+  --field: #e8e9e3;         /* Secondary buttons, muted fills (sampled) */
+  --pale-sage: #edf2ec;     /* Subtle section bg / selected */
+  --ink: #202c26;           /* Primary text */
+  --ink-soft: #56665c;      /* Body copy (AA contrast on ivory) */
+  --ink-muted: #89988d;     /* Captions, disabled — not for body text */
+  --line: #e1e3dd;          /* Hairline borders (sampled) */
+  --line-strong: #c3c6c1;   /* Outlined buttons, input borders (sampled) */
+  --forest-hover: #1b2d26;  /* Primary button hover */
+
+  /* RGB triples of the brand colors, for translucent layers (glass, shadows).
+     Keep in sync with the hex values above. */
+  --forest-rgb: 38 58 50;
+  --sage-rgb: 120 155 134;
+  --ivory-rgb: 244 245 240;
+
+  /* ---- Status colors (bg + text pairs) ---- */
+  --status-requested-bg: #e3edf7;  --status-requested-fg: #3b6a9c;  /* Soft blue   */
+  --status-accepted-bg:  #e8e8f6;  --status-accepted-fg:  #55559a;  /* Muted indigo */
+  --status-amber-bg:     #fbf0d9;  --status-amber-fg:     #9a6410;  /* In progress / Unpaid / Pending */
+  --status-success-bg:   #dff0e4;  --status-success-fg:   #2f6b45;  /* Completed / Paid / Approved */
+  --status-rejected-bg:  #f7e3e1;  --status-rejected-fg:  #a24640;  /* Muted red   */
+  --status-cancelled-bg: #ececea;  --status-cancelled-fg: #6b726d;  /* Neutral gray */
+
+  /* ---- shadcn/ui semantic tokens mapped to the palette ---- */
+  --background: var(--ivory);
+  --foreground: var(--ink);
+  --card: var(--card-tint);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--forest);
+  --primary-foreground: #ffffff;
+  --secondary: var(--field);
+  --secondary-foreground: var(--forest);
+  --muted: var(--field);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--field);
+  --accent-foreground: var(--forest);
+  --destructive: var(--status-rejected-fg);
+  --border: var(--line);
+  --input: var(--line-strong);
+  --ring: var(--sage);
+  --radius: 0.875rem;
+}
+
+/* Expose everything as Tailwind utilities: bg-forest, text-sage, bg-pale-sage … */
+@theme inline {
+  --color-forest: var(--forest);
+  --color-sage: var(--sage);
+  --color-muted-sage: var(--muted-sage);
+  --color-ivory: var(--ivory);
+  --color-surface: var(--surface);
+  --color-pale-sage: var(--pale-sage);
+  --color-card-tint: var(--card-tint);
+  --color-field: var(--field);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-forest-hover: var(--forest-hover);
+
+  --color-status-requested-bg: var(--status-requested-bg);
+  --color-status-requested-fg: var(--status-requested-fg);
+  --color-status-accepted-bg: var(--status-accepted-bg);
+  --color-status-accepted-fg: var(--status-accepted-fg);
+  --color-status-amber-bg: var(--status-amber-bg);
+  --color-status-amber-fg: var(--status-amber-fg);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-fg: var(--status-success-fg);
+  --color-status-rejected-bg: var(--status-rejected-bg);
+  --color-status-rejected-fg: var(--status-rejected-fg);
+  --color-status-cancelled-bg: var(--status-cancelled-bg);
+  --color-status-cancelled-fg: var(--status-cancelled-fg);
+
+  /* shadcn semantic colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}

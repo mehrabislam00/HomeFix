@@ -1,95 +1,183 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
-
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: var(--font-sans);
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-:root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
-}
+@import "./colors.css"; /* keep LAST so it wins over shadcn's default colors */
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
-    }
+    @apply border-border;
+  }
+  html,
   body {
-    @apply bg-background text-foreground;
-    }
-  html {
-    @apply font-sans;
-    }
+    background: var(--ivory);
+    color: var(--ink);
+  }
+}
+
+/* ==========================================================================
+   LIQUID GLASS  (HomeFix tint: ivory + sage, forest-tinted depth)
+
+   Layers, bottom to top:
+   1. backdrop      blur + saturation (+ SVG edge refraction in Chromium,
+                    applied inline by <LiquidGlass />)
+   2. tint          white→ivory wash + a hint of sage, opaque enough to keep
+                    text readable
+   3. inner shadows top-left highlight, bottom-right bounce light, contour
+                    hairline, "thickness" shading top & bottom
+   4. ::before      specular sheen
+   5. ::after       rim light (bright on opposite corners)
+   6. outer shadow  forest-tinted, so it sits on the ivory page naturally
+
+   NOTE: no `position` here — add `relative` / `absolute` where it is used.
+   ========================================================================== */
+.liquid-glass {
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.62) 0%, rgb(var(--ivory-rgb) / 0.4) 100%),
+    rgb(var(--sage-rgb) / 0.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.9) brightness(1.04);
+  backdrop-filter: blur(14px) saturate(1.9) brightness(1.04);
+  border: 1px solid rgb(255 255 255 / 0.5);
+  box-shadow:
+    inset 2px 2px 3px -1px rgb(255 255 255 / 0.95),
+    inset -2px -2px 3px -1px rgb(255 255 255 / 0.7),
+    inset 0 0 0 1px rgb(var(--forest-rgb) / 0.05),
+    inset 0 10px 18px -12px rgb(255 255 255 / 0.85),
+    inset 0 -12px 20px -10px rgb(var(--forest-rgb) / 0.14),
+    0 1px 2px rgb(var(--forest-rgb) / 0.08),
+    0 14px 34px -12px rgb(var(--forest-rgb) / 0.32);
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+/* a little more body once the page has scrolled under the bar */
+.liquid-glass[data-scrolled="true"] {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.7) 0%, rgb(var(--ivory-rgb) / 0.5) 100%),
+    rgb(var(--sage-rgb) / 0.12);
+  box-shadow:
+    inset 2px 2px 3px -1px rgb(255 255 255 / 0.95),
+    inset -2px -2px 3px -1px rgb(255 255 255 / 0.7),
+    inset 0 0 0 1px rgb(var(--forest-rgb) / 0.06),
+    inset 0 10px 18px -12px rgb(255 255 255 / 0.85),
+    inset 0 -12px 20px -10px rgb(var(--forest-rgb) / 0.16),
+    0 1px 2px rgb(var(--forest-rgb) / 0.1),
+    0 20px 44px -14px rgb(var(--forest-rgb) / 0.4);
+}
+
+/* specular sheen: soft light from the top-left, sage bounce from bottom-right */
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(90% 160% at 8% -40%, rgb(255 255 255 / 0.85), transparent 48%),
+    radial-gradient(70% 140% at 100% 140%, rgb(var(--sage-rgb) / 0.22), transparent 55%);
+}
+
+/* rim light: bright on opposite corners, invisible in between */
+.liquid-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 1),
+    rgb(255 255 255 / 0) 32%,
+    rgb(255 255 255 / 0) 68%,
+    rgb(255 255 255 / 0.85)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .liquid-glass {
+    background: rgb(var(--ivory-rgb) / 0.94);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass {
+    background: rgb(var(--ivory-rgb) / 0.96);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ==========================================================================
+   Motion helpers (Magic UI–style). All disabled for prefers-reduced-motion.
+   ========================================================================== */
+
+/* Border beam: a light that travels around the border of its parent */
+@property --beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes beam-spin {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+.border-beam {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg,
+    transparent 290deg,
+    var(--sage) 330deg,
+    var(--forest) 356deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: beam-spin 6s linear infinite;
+}
+
+/* Shiny text: a soft highlight sweeps across the word */
+@keyframes shiny-sweep {
+  from { background-position: 150% 0; }
+  to   { background-position: -50% 0; }
+}
+.shiny-text {
+  background-image: linear-gradient(110deg, var(--sage) 38%, #b4d0bf 50%, var(--sage) 62%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shiny-sweep 4.5s ease-in-out infinite;
+}
+
+/* Shine on hover for primary buttons (add `shine` + `relative overflow-hidden`) */
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.3), transparent);
+  transform: translateX(-130%) skewX(-20deg);
+  transition: transform 0.8s ease;
+}
+.shine:hover::after {
+  transform: translateX(130%) skewX(-20deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .border-beam,
+  .shiny-text {
+    animation: none;
+  }
+  .shine::after {
+    display: none;
+  }
 }
