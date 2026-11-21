@@ -7,7 +7,6 @@ import { PopularCategories } from "@/components/home/popular-categories";
 import { Testimonials } from "@/components/home/testimonials";
 import { TopRatedServices } from "@/components/home/top-rated-services";
 import { WhyHomeFix } from "@/components/home/why-homefix";
-import { Navbar } from "@/components/Navbar/navbar";
 import { PageBackdrop } from "@/components/PageBackdrop/page-backdrop";
 
 
@@ -15,12 +14,11 @@ const Home = () => {
   return (
     <main className="relative isolate min-h-screen overflow-x-clip bg-ivory">
       <PageBackdrop />
-      
       <Hero />
       <PopularCategories />
-      <HowItWorks />
       <TopRatedServices />
-       <Testimonials />
+      <HowItWorks />
+      <Testimonials />
       <WhyHomeFix />
       <CtaBanner />
     </main>

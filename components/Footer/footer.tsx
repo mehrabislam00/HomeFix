@@ -11,7 +11,7 @@ const explore: FooterLink[] = [
   { label: "All Services", href: "/services" },
   { label: "About HomeFix", href: "/about" },
   { label: "Become a Technician", href: "/become-a-technician" },
-  { label: "Sign In", href: "/sign-in" },
+  { label: "Sign In", href: "/login" },
 ];
 
 /** Same category hrefs as PopularCategories / HeroVisual. */

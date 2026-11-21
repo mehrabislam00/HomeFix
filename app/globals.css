@@ -216,9 +216,23 @@
   transform: translateX(130%) skewX(-20deg);
 }
 
+/* Gentle idle drift for decorative floating cards (auth panels) */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+.animate-float {
+  animation: float-y 7s ease-in-out infinite;
+}
+.animate-float-delayed {
+  animation: float-y 9s ease-in-out -3s infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .border-beam,
-  .shiny-text {
+  .shiny-text,
+  .animate-float,
+  .animate-float-delayed {
     animation: none;
   }
   .shine::after {

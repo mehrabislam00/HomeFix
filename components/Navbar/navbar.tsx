@@ -88,10 +88,10 @@ export function Navbar() {
                 className={cn(btn.md, btn.ghost, "hidden hover:bg-white/60 hover:text-forest sm:inline-flex")}
                 asChild
               >
-                <Link href="/sign-in">Sign In</Link>
+                <Link href="/login">Sign In</Link>
               </Button>
               <Button className={cn(btn.md, btn.primary)} asChild>
-                <Link href="/get-started">Get Started</Link>
+                <Link href="/register">Get Started</Link>
               </Button>
 
               {/* Mobile menu */}
@@ -134,10 +134,10 @@ export function Navbar() {
                   </ul>
                   <div className="mt-auto flex flex-col gap-2 border-t border-line p-5">
                     <Button className={cn(btn.lg, btn.outline, "bg-surface hover:bg-field")} asChild>
-                      <Link href="/sign-in" onClick={() => setOpen(false)}>Sign In</Link>
+                      <Link href="/login" onClick={() => setOpen(false)}>Sign In</Link>
                     </Button>
                     <Button className={cn(btn.lg, btn.primary)} asChild>
-                      <Link href="/get-started" onClick={() => setOpen(false)}>Get Started</Link>
+                      <Link href="/register" onClick={() => setOpen(false)}>Get Started</Link>
                     </Button>
                   </div>
                 </SheetContent>
