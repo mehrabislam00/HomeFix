@@ -113,7 +113,7 @@ export function PopularCategories({
                       aria-hidden
                       strokeWidth={1.75}
                       className={cn(
-                        "size-7 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+                        "size-7 origin-center transition-transform duration-300 ease-out",
                         "group-hover:-rotate-6",
                         "motion-reduce:transition-none motion-reduce:group-hover:transform-none"
                       )}

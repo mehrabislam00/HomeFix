@@ -4,7 +4,7 @@ import { ArrowRight, Star } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, formatBDT } from "@/lib/utils";
 
 export type FeaturedService = {
   id: string;
@@ -78,7 +78,7 @@ export function ServiceCard({
           </span>
           <span className="leading-none">
             <strong className="font-[family-name:var(--font-manrope)] text-lg font-extrabold text-forest">
-              ${price}
+              {formatBDT(price)}
             </strong>
             <span className="ml-1 text-xs text-ink-muted">/visit</span>
           </span>

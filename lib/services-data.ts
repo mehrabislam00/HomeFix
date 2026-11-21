@@ -116,3 +116,32 @@ export const serviceCategories = [
 export const featuredServices: FeaturedService[] = [...allServices]
   .sort((a, b) => b.rating - a.rating)
   .slice(0, 6)
+
+/** Demo technician profiles until real profiles are available from the API / DB. */
+const technicianProfiles: Record<string, { area: string; phone: string }> = {
+  "Rafiqul Islam": { area: "Mirpur, Dhaka", phone: "+880 0000 000 001" },
+  "Tanvir Ahmed": { area: "Uttara, Dhaka", phone: "+880 0000 000 002" },
+}
+
+export const defaultAvailability = "Sat–Thu, 9:00 AM – 8:00 PM"
+
+export function getServiceById(id: string) {
+  const service = allServices.find((s) => s.id === id)
+  if (!service) return undefined
+  const technician = technicianProfiles[service.technician]
+  return {
+    ...service,
+    availability: defaultAvailability,
+    technicianArea: technician?.area ?? "Dhaka",
+    technicianPhone: technician?.phone,
+  }
+}
+
+export function getRelatedServices(id: string, limit = 3) {
+  const current = allServices.find((s) => s.id === id)
+  if (!current) return []
+  const candidates = allServices.filter((s) => s.id !== id)
+  const sameCategory = candidates.filter((s) => s.category === current.category)
+  const otherCategories = candidates.filter((s) => s.category !== current.category)
+  return [...sameCategory, ...otherCategories].slice(0, limit)
+}
