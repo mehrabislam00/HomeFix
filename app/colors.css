@@ -8,6 +8,7 @@
   /* ---- Brand palette (raw values) ---- */
   --forest: #263a32;        /* Primary / Deep Forest Green */
   --sage: #789b86;          /* Secondary / Sage Green */
+  --sage-deep: #4a6e5a;     /* Darker sage for small text on pale-sage (AA contrast) */
   --muted-sage: #729b83;    /* Accent / Muted Sage */
   --ivory: #f4f5f0;         /* Main background (confirmed by user) */
   --surface: #ffffff;       /* Inputs, forms, floating chips */
@@ -61,6 +62,7 @@
 @theme inline {
   --color-forest: var(--forest);
   --color-sage: var(--sage);
+  --color-sage-deep: var(--sage-deep);
   --color-muted-sage: var(--muted-sage);
   --color-ivory: var(--ivory);
   --color-surface: var(--surface);

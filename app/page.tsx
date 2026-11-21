@@ -1,6 +1,7 @@
 // app/page.tsx
 
 import { Hero } from "@/components/Hero/hero";
+import { HowItWorks } from "@/components/home/how-it works";
 import { PopularCategories } from "@/components/home/popular-categories";
 import { Navbar } from "@/components/Navbar/navbar";
 import { PageBackdrop } from "@/components/PageBackdrop/page-backdrop";
@@ -13,6 +14,7 @@ const Home = () => {
       <Navbar />
       <Hero />
       <PopularCategories />
+      <HowItWorks />
     </main>
   );
 };
