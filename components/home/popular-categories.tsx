@@ -81,7 +81,8 @@ export function PopularCategories({
         </Button>
       }
     >
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-6">
+      <div className="mx-auto max-w-[1440px]">
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-6">
         {categories.map(({ name, description, href, icon }, i) => {
           const Icon = icon ?? getCategoryIcon(name);
           return (
@@ -145,6 +146,7 @@ export function PopularCategories({
           );
         })}
       </ul>
+      </div>
     </SectionShell>
   );
 }

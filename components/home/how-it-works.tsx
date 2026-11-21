@@ -33,7 +33,7 @@ const steps: Step[] = [
 export function HowItWorks() {
   return (
     <section id="how-it-works" className="scroll-mt-28 px-4 py-10 sm:px-6 sm:py-14">
-      <div className="mx-auto max-w-[1280px] rounded-[2rem] border border-line-strong/50 bg-pale-sage px-6 py-12 shadow-[inset_0_1px_0_rgb(255_255_255/0.8)] sm:px-10 sm:py-16">
+      <div className="mx-auto max-w-[1440px] rounded-[2rem] border border-line-strong/50 bg-pale-sage px-6 py-12 shadow-[inset_0_1px_0_rgb(255_255_255/0.8)] sm:px-10 sm:py-16">
         {/* Heading */}
         <BlurFade inView className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold text-sage-deep">How it works</p>

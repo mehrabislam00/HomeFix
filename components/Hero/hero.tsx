@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 export function Hero() {
   return (
-    <section className="mx-auto grid max-w-[1280px] items-center gap-16 px-6 pb-24 pt-16 sm:px-10 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-20">
+    <section className="mx-auto grid max-w-[1440px] items-center gap-16 px-6 pb-24 pt-16 sm:px-10 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-20">
       {/* ---------- Left: copy (one staggered entrance) ---------- */}
       <div className="flex flex-col items-start">
         <BlurFade delay={0}>

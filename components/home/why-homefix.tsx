@@ -40,7 +40,7 @@ const defaultStats: Stat[] = [
 export function WhyHomeFix({ stats = defaultStats }: { stats?: Stat[] }) {
   return (
     <section id="why-homefix" className="scroll-mt-28 px-4 py-10 sm:px-6 sm:py-14">
-      <div className="mx-auto grid max-w-[1280px] items-center gap-10 px-2 sm:px-4 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
+      <div className="mx-auto grid max-w-[1440px] items-center gap-10 px-2 sm:px-4 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
         {/* Copy + features */}
         <div>
           <BlurFade inView>

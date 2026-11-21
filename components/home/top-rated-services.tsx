@@ -108,7 +108,7 @@ export function TopRatedServices({
         <div className="absolute -left-24 top-1/3 size-[380px] rounded-full bg-sage/20 blur-3xl" />
         <div className="absolute -right-20 bottom-10 size-[420px] rounded-full bg-muted-sage/20 blur-3xl" />
       </div>
-      <div className="relative mx-auto max-w-[1280px] px-2 sm:px-4">
+      <div className="relative mx-auto max-w-[1440px] px-2 sm:px-4">
         {/* Heading */}
         <BlurFade inView className="flex items-end justify-between gap-4">
           <div>

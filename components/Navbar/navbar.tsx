@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 
 import { LiquidGlass } from "@/components/liquid-glass";
 import { Button } from "@/components/ui/button";
@@ -25,8 +26,13 @@ const links = [
   { label: "About", href: "/about" },
 ];
 
+/** Home only matches "/", other links also match their sub-routes (e.g. /services/ac-repair). */
+const isActive = (pathname: string, href: string) =>
+  href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+
 export function Navbar() {
   const pathname = usePathname();
+  const reduce = useReducedMotion();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -44,8 +50,7 @@ export function Navbar() {
         <LiquidGlass
           data-scrolled={scrolled}
           radius={28}
-          blur={12}
-          className="liquid-glass liquid-glass-nav relative mx-auto flex h-[72px] max-w-[1280px] items-center justify-between px-3 sm:h-20 sm:px-6"
+          className="liquid-glass relative mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-3 sm:h-20 sm:px-6"
         >
           <nav className="contents" aria-label="Main">
             {/* Logo only */}
@@ -59,22 +64,33 @@ export function Navbar() {
             </Link>
 
             {/* Center links — inner glass track */}
-            <ul className="hidden items-center gap-1 rounded-full border border-white/60 bg-white/20 p-1 shadow-[inset_0_1px_1px_rgb(255_255_255/0.8),inset_0_-1px_1px_rgb(255_255_255/0.03)] md:flex">
+            <ul className="hidden items-center gap-1 rounded-full border border-white/60 bg-white/40 p-1 shadow-[inset_0_1px_1px_rgb(255_255_255/0.9),inset_0_-1px_1px_rgb(38_58_50/0.06)] md:flex">
               {links.map(({ label, href }) => {
-                const active = pathname === href;
+                const active = isActive(pathname, href);
                 return (
                   <li key={href}>
                     <Link
                       href={href}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "inline-flex h-10 items-center rounded-full px-5 text-sm font-medium leading-none transition-all duration-200",
+                        "relative inline-flex h-10 items-center rounded-full px-5 text-sm font-medium leading-none transition-colors duration-200",
                         active
-                          ? "bg-forest text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_6px_14px_-6px_rgb(38_58_50/0.6)]"
-                          : "text-ink-soft hover:bg-white/70 hover:text-forest"
+                          ? "text-white"
+                          : "text-ink-soft hover:bg-forest/10 hover:text-forest hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.35)]"
                       )}
                     >
-                      {label}
+                      {/* Shared-layout pill: slides from the previous link to this one */}
+                      {active && (
+                        <motion.span
+                          layoutId="nav-active-pill"
+                          aria-hidden
+                          className="absolute inset-0 rounded-full bg-forest shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_6px_14px_-6px_rgb(38_58_50/0.6)]"
+                          transition={
+                            reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 32, mass: 0.9 }
+                          }
+                        />
+                      )}
+                      <span className="relative z-10">{label}</span>
                     </Link>
                   </li>
                 );
@@ -85,7 +101,7 @@ export function Navbar() {
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Button
                 variant="ghost"
-                className={cn(btn.md, btn.ghost, "hidden hover:bg-white/60 hover:text-forest sm:inline-flex")}
+                className={cn(btn.md, btn.ghost, "hidden hover:bg-forest/10 hover:text-forest hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.35)] sm:inline-flex")}
                 asChild
               >
                 <Link href="/login">Sign In</Link>
@@ -101,7 +117,7 @@ export function Navbar() {
                     <Button
                       variant="ghost"
                       aria-label="Open menu"
-                      className="size-10 rounded-xl border border-white/60 bg-white/40 p-0 text-forest hover:bg-white/70 md:hidden"
+                      className="size-10 rounded-xl border border-white/60 bg-white/40 p-0 text-forest hover:bg-forest/10 md:hidden"
                     >
                       <Menu className="size-5" />
                     </Button>
@@ -114,7 +130,7 @@ export function Navbar() {
                   </SheetHeader>
                   <ul className="flex flex-col gap-1 p-3">
                     {links.map(({ label, href }) => {
-                      const active = pathname === href;
+                      const active = isActive(pathname, href);
                       return (
                         <li key={href}>
                           <Link
@@ -123,7 +139,7 @@ export function Navbar() {
                             aria-current={active ? "page" : undefined}
                             className={cn(
                               "flex h-12 items-center rounded-xl px-4 text-base font-medium transition-colors",
-                              active ? "bg-forest text-white" : "text-ink hover:bg-field"
+                              active ? "bg-forest text-white" : "text-ink hover:bg-forest/10 hover:text-forest"
                             )}
                           >
                             {label}

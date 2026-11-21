@@ -59,7 +59,7 @@ export function Testimonials({
         <div className="absolute -left-20 bottom-0 size-[360px] rounded-full bg-muted-sage/20 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto max-w-[1280px] px-2 sm:px-4">
+      <div className="relative mx-auto max-w-[1440px] px-2 sm:px-4">
         <BlurFade inView className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold text-sage-deep">Customer testimonials</p>
           <h2 className="mt-2 font-[family-name:var(--font-manrope)] text-3xl font-extrabold tracking-tight text-forest sm:text-4xl">
