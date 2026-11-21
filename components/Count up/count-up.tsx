@@ -33,4 +33,4 @@ export function CountUp({
   }, [to, duration, delay, reduce]);
 
   return <span className="tabular-nums">{value.toFixed(decimals)}</span>;
-}s
+}

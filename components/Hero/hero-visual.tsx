@@ -3,13 +3,14 @@ import Link from "next/link";
 import { ShieldCheck, Star } from "lucide-react";
 
 import { BlurFade } from "@/components/magic/blur-fade";
-import { CountUp } from "@/components/magic/count-up";
+
 import { cn } from "@/lib/utils";
 import acImg from "@/assets/cat-ac.jpg";
 import fridgeImg from "@/assets/cat-fridge.jpg";
 import washerImg from "@/assets/cat-washer.jpg";
 import plumbingImg from "@/assets/cat-plumbing.jpg";
 import electricalImg from "@/assets/cat-electrical.jpg";
+import { CountUp } from "../Count up/count-up";
 
 type Tile = {
   label: string;
