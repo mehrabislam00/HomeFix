@@ -15,7 +15,7 @@ const Home = () => {
   return (
     <main className="relative isolate min-h-screen overflow-x-clip bg-ivory">
       <PageBackdrop />
-      <Navbar />
+      
       <Hero />
       <PopularCategories />
       <HowItWorks />
