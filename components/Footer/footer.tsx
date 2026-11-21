@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import { Mail, MapPin, Phone, type LucideIcon } from "lucide-react";
 
@@ -64,7 +64,7 @@ export function Footer() {
         <div className="absolute -left-24 -top-32 size-[380px] rounded-full bg-sage/15 blur-3xl" />
       </div>
 
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-6 py-14 sm:grid-cols-2 sm:px-10 lg:grid-cols-4 lg:gap-8">
+      <div className="mx-auto grid max-w-[1440px] gap-10 px-6 py-14 sm:grid-cols-2 sm:px-10 lg:grid-cols-4 lg:gap-8">
         {/* Brand */}
         <div className="max-w-xs">
           {/* brightness-0 + invert turns the logo into a white mark so the dark "Home" wordmark reads on forest */}
@@ -111,8 +111,8 @@ export function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-2 px-6 py-5 text-xs text-white/60 sm:flex-row sm:px-10">
-          <p>© {new Date().getFullYear()} HomeFix. All rights reserved.</p>
+        <div className="mx-auto flex max-w-[1440px] flex-col items-center justify-between gap-2 px-6 py-5 text-xs text-white/60 sm:flex-row sm:px-10">
+          <p>Â© {new Date().getFullYear()} HomeFix. All rights reserved.</p>
           <p>Your Home, Our Responsibility.</p>
         </div>
       </div>

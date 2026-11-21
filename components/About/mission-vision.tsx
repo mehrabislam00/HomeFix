@@ -19,7 +19,7 @@ const items: { title: string; description: string; icon: LucideIcon }[] = [
 
 export function MissionVision() {
   return (
-    <section className="mx-auto max-w-[1280px] px-6 py-10 sm:px-10 sm:py-14">
+    <section className="mx-auto max-w-[1440px] px-6 py-10 sm:px-10 sm:py-14">
       <ul className="grid gap-4 sm:gap-6 md:grid-cols-2">
         {items.map(({ title, description, icon: Icon }, i) => (
           <li key={title} className="flex">

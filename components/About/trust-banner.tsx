@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 
 export function TrustBanner() {
   return (
-    <section className="mx-auto max-w-[1280px] px-6 pt-6 pb-20 sm:px-10 sm:pt-10">
+    <section className="mx-auto max-w-[1440px] px-6 pt-6 pb-20 sm:px-10 sm:pt-10">
       <BlurFade inView fade={false} y={16}>
         <div className="glass-card relative flex flex-col gap-5 rounded-[1.75rem] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="flex items-start gap-4">

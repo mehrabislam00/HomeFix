@@ -66,7 +66,7 @@ const audiences: Audience[] = [
 
 export function AudiencePanels() {
   return (
-    <section className="mx-auto max-w-[1280px] px-6 py-6 sm:px-10 sm:py-10">
+    <section className="mx-auto max-w-[1440px] px-6 py-6 sm:px-10 sm:py-10">
       <ul className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {audiences.map(({ title, icon: Icon, benefits }, i) => (
           <li key={title} className="flex">

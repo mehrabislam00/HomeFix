@@ -10,7 +10,7 @@ import teamImg from "@/assets/about-team.jpg"
 
 export function AboutHero() {
   return (
-    <section className="mx-auto grid max-w-[1280px] items-center gap-12 px-6 pt-12 pb-10 sm:px-10 lg:grid-cols-[1fr_1fr] lg:gap-14 lg:pt-16">
+    <section className="mx-auto grid max-w-[1440px] items-center gap-12 px-6 pt-12 pb-10 sm:px-10 lg:grid-cols-[1fr_1fr] lg:gap-14 lg:pt-16">
       {/* Copy */}
       <div className="flex flex-col items-start">
         <BlurFade>
