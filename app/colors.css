@@ -26,7 +26,9 @@
      Keep in sync with the hex values above. */
   --forest-rgb: 38 58 50;
   --sage-rgb: 120 155 134;
+  --sage-deep-rgb: 74 110 90;
   --ivory-rgb: 244 245 240;
+  --pale-sage-rgb: 237 242 236;
 
   /* ---- Status colors (bg + text pairs) ---- */
   --status-requested-bg: #e3edf7;  --status-requested-fg: #3b6a9c;  /* Soft blue   */

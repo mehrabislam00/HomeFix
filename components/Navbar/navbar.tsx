@@ -44,7 +44,8 @@ export function Navbar() {
         <LiquidGlass
           data-scrolled={scrolled}
           radius={28}
-          className="liquid-glass relative mx-auto flex h-[72px] max-w-[1280px] items-center justify-between px-3 sm:h-20 sm:px-6"
+          blur={12}
+          className="liquid-glass liquid-glass-nav relative mx-auto flex h-[72px] max-w-[1280px] items-center justify-between px-3 sm:h-20 sm:px-6"
         >
           <nav className="contents" aria-label="Main">
             {/* Logo only */}
@@ -58,7 +59,7 @@ export function Navbar() {
             </Link>
 
             {/* Center links — inner glass track */}
-            <ul className="hidden items-center gap-1 rounded-full border border-white/60 bg-white/40 p-1 shadow-[inset_0_1px_1px_rgb(255_255_255/0.9),inset_0_-1px_1px_rgb(38_58_50/0.06)] md:flex">
+            <ul className="hidden items-center gap-1 rounded-full border border-white/60 bg-white/20 p-1 shadow-[inset_0_1px_1px_rgb(255_255_255/0.8),inset_0_-1px_1px_rgb(255_255_255/0.03)] md:flex">
               {links.map(({ label, href }) => {
                 const active = pathname === href;
                 return (
