@@ -101,8 +101,10 @@ export function TopRatedServices({
 }) {
   return (
     <section id="top-rated" className="relative scroll-mt-28 px-4 py-10 sm:px-6 sm:py-14">
-      {/* Soft sage light-pools so the frosted cards have something to blur */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* Soft sage light-pools so the frosted cards have something to blur.
+          Not clipped vertically (-bottom-32 + -z-10) so the glow fades out under the next section
+          instead of ending in a hard edge; overflow-x-clip prevents horizontal scroll. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -bottom-32 top-0 -z-10 overflow-x-clip">
         <div className="absolute -left-24 top-1/3 size-[380px] rounded-full bg-sage/20 blur-3xl" />
         <div className="absolute -right-20 bottom-10 size-[420px] rounded-full bg-muted-sage/20 blur-3xl" />
       </div>

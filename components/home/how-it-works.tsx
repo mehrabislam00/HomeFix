@@ -74,7 +74,7 @@ export function HowItWorks() {
                   <Icon
                     aria-hidden
                     strokeWidth={1.75}
-                    className="size-7 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:-rotate-6 motion-reduce:transition-none motion-reduce:group-hover:transform-none"
+                    className="size-7 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-rotate-6 motion-reduce:transition-none motion-reduce:group-hover:transform-none"
                   />
                 </span>
 
