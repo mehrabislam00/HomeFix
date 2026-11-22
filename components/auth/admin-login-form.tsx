@@ -6,17 +6,34 @@ import { Lock, Mail, ShieldCheck } from "lucide-react";
 
 import { AuthError, AuthSubmit } from "@/components/auth/auth-submit";
 import { FormField } from "@/components/auth/form-field";
-import { NOT_CONNECTED, type AuthResult, type LoginValues } from "@/lib/auth-types";
+import { type AuthResult, type LoginValues } from "@/lib/auth-types";
+import { authClient } from "@/lib/auth-client";
 import { email as validateEmail, password as validatePassword, type FieldErrors } from "@/lib/validation";
 
 /**
- * `onSubmit` must authenticate against your backend AND confirm the account
- * has the admin role server-side, returning `{ ok: false }` otherwise.
- * This form only redirects after the backend says yes.
+ * Without `onSubmit`, signs in with Better Auth and then confirms the account
+ * has the admin role; any other account is signed straight back out. The
+ * dashboard layout and every admin action re-check the role on the server.
  */
+async function signInAsAdmin(values: LoginValues): Promise<AuthResult> {
+  const { error } = await authClient.signIn.email({
+    email: values.email,
+    password: values.password,
+  });
+  if (error) return { ok: false, error: error.message || "Unable to sign in." };
+
+  const { data: session } = await authClient.getSession({ query: { disableCookieCache: true } });
+  const role: string | undefined = session?.user.role;
+  if (role !== "admin") {
+    await authClient.signOut();
+    return { ok: false, error: "This account doesn't have administrator access." };
+  }
+  return { ok: true };
+}
+
 export function AdminLoginForm({
   onSubmit,
-  redirectTo = "/admin/dashboard",
+  redirectTo = "/auth/complete",
 }: {
   onSubmit?: (values: LoginValues) => Promise<AuthResult>;
   redirectTo?: string;
@@ -39,8 +56,14 @@ export function AdminLoginForm({
     if (next.email || next.password) return;
 
     setPending(true);
-    const result = onSubmit ? await onSubmit(values) : NOT_CONNECTED;
-    setPending(false);
+    let result: AuthResult;
+    try {
+      result = onSubmit ? await onSubmit(values) : await signInAsAdmin(values);
+    } catch (error) {
+      result = { ok: false, error: error instanceof Error ? error.message : "Unable to sign in." };
+    } finally {
+      setPending(false);
+    }
     if (result.ok) router.push(redirectTo);
     else setFormError(result.error);
   }

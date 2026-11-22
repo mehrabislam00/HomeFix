@@ -1,15 +1,18 @@
 import {
   CalendarCheck,
   CirclePlus,
+  ClipboardCheck,
   CreditCard,
   LayoutGrid,
   ListChecks,
+  Receipt,
   User,
+  Users,
   Wrench,
   type LucideIcon,
 } from "lucide-react"
 
-export type DashboardVariant = "customer" | "technician"
+export type DashboardVariant = "customer" | "technician" | "admin"
 
 export type DashboardNavItem = {
   label: string
@@ -27,6 +30,7 @@ type DashboardConfig = {
 
 const CUSTOMER_BASE = "/customer-dashboard"
 const TECHNICIAN_BASE = "/technician-dashboard"
+const ADMIN_BASE = "/admin-dashboard"
 
 /**
  * Single source of truth for dashboard navigation. Sidebar, mobile drawer and
@@ -75,8 +79,36 @@ export const dashboardConfig: Record<DashboardVariant, DashboardConfig> = {
       { label: "Profile", href: `${TECHNICIAN_BASE}/profile`, icon: User },
     ],
   },
+  admin: {
+    label: "Admin Console",
+    basePath: ADMIN_BASE,
+    nav: [
+      { label: "Overview", href: ADMIN_BASE, icon: LayoutGrid },
+      { label: "Manage Users", href: `${ADMIN_BASE}/users`, icon: Users },
+      {
+        label: "Service Approval",
+        href: `${ADMIN_BASE}/approvals`,
+        icon: ClipboardCheck,
+      },
+      {
+        label: "All Bookings",
+        href: `${ADMIN_BASE}/all-bookings`,
+        icon: CalendarCheck,
+      },
+      {
+        label: "Transactions",
+        href: `${ADMIN_BASE}/transactions`,
+        icon: Receipt,
+      },
+      { label: "Profile", href: `${ADMIN_BASE}/profile`, icon: User },
+    ],
+  },
 }
 
 /** Where a signed-in user's "Dashboard" link should go. */
 export const dashboardHref = (role?: string | null) =>
-  role === "technician" ? TECHNICIAN_BASE : CUSTOMER_BASE
+  role === "admin"
+    ? ADMIN_BASE
+    : role === "technician"
+      ? TECHNICIAN_BASE
+      : CUSTOMER_BASE

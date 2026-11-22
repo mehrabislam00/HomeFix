@@ -31,8 +31,11 @@ const MAX_PHOTO_SIZE = 5 * 1024 * 1024
 export function ProfileForm({
   customer,
   onSubmit,
+  allowPhoto = true,
 }: {
   customer: Customer
+  /** Admin accounts have no avatar storage yet, so they hide the photo picker. */
+  allowPhoto?: boolean
   onSubmit: (
     values: ProfileValues,
     photo: File | null
@@ -193,7 +196,8 @@ export function ProfileForm({
           <AuthError message={formError} />
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <div className="flex items-center gap-4 flex-wrap rounded-2xl border border-white/80 bg-white/55 p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.9)] sm:col-span-2 sm:flex-nowrap">
+            {allowPhoto && (
+        <div className="flex items-center gap-4 flex-wrap rounded-2xl border border-white/80 bg-white/55 p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.9)] sm:col-span-2 sm:flex-nowrap">
               <Avatar size="lg" className="size-16 ring-2 ring-white">
                 {photoPreview && (
                   <AvatarImage
@@ -242,6 +246,7 @@ export function ProfileForm({
                 {savedImage || photo ? "Replace" : "Upload"}
               </Button>
             </div>
+        )}
             <FormField
               label="Full name"
               name="name"

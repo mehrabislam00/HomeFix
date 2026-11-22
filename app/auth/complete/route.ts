@@ -9,12 +9,15 @@ export async function GET(request: NextRequest) {
       query: { disableCookieCache: true },
     })
 
+    const role: string | undefined = session?.user.role
     const destination =
-      session?.user.role === "customer"
-        ? "/customer-dashboard"
-        : session?.user.role === "technician"
-          ? "/technician-dashboard"
-          : "/login"
+      role === "admin"
+        ? "/admin-dashboard"
+        : role === "customer"
+          ? "/customer-dashboard"
+          : role === "technician"
+            ? "/technician-dashboard"
+            : "/login"
     const response = NextResponse.redirect(new URL(destination, request.url))
     response.cookies.delete("homefix-registration-role")
     return response

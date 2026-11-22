@@ -41,7 +41,7 @@ const approvalMap: Record<
   rejected: { label: "Rejected", tone: "red" },
 }
 
-function Pill({
+export function Pill({
   label,
   tone,
   className,

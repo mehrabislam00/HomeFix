@@ -2,15 +2,21 @@ import { redirect } from "next/navigation"
 
 import { DashboardShell } from "@/components/Dashboard/dashboard-shell"
 import type { DashboardVariant } from "@/lib/dashboard-config"
+import { getAdminProfile } from "@/lib/Action/admin-actions"
 import { getCustomerProfile } from "@/lib/Action/customer-actions"
 import { getTechnicianProfile } from "@/lib/Action/technician-actions"
 
 const loaders = {
   customer: getCustomerProfile,
   technician: getTechnicianProfile,
+  admin: getAdminProfile,
 } as const
 
-const roleLabel = { customer: "Customer", technician: "Technician" } as const
+const roleLabel = {
+  customer: "Customer",
+  technician: "Technician",
+  admin: "Admin",
+} as const
 
 /**
  * Shared server layout for both dashboards: verifies the session role, then
