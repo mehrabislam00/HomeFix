@@ -12,7 +12,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || session.user.role !== "customer") {
+  if (
+    !session ||
+    (session.user.role !== "customer" && session.user.role !== "technician")
+  ) {
     return new Response("Unauthorized", { status: 401 })
   }
 

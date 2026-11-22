@@ -20,7 +20,7 @@ export function RecentBookings({ bookings }: { bookings: Booking[] }) {
             </p>
           </div>
           <Link
-            href="/dashboard/bookings"
+            href="/customer-dashboard/bookings"
             className="group inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-sage-deep transition-colors hover:text-forest focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage"
           >
             View all

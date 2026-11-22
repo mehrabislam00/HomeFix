@@ -29,6 +29,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { signOut } from "@/lib/Action/auth-actions"
+import { dashboardConfig, type DashboardVariant } from "@/lib/dashboard-config"
 import { initialsOf } from "@/lib/dashboard-data"
 import { cn } from "@/lib/utils"
 import { SidebarContent, type DashboardUser } from "./sidebar"
@@ -87,8 +88,15 @@ function Notifications() {
   )
 }
 
-function AccountMenu({ user }: { user: DashboardUser }) {
+function AccountMenu({
+  user,
+  variant,
+}: {
+  user: DashboardUser
+  variant: DashboardVariant
+}) {
   const pathname = usePathname()
+  const { basePath } = dashboardConfig[variant]
   const [openedOn, setOpenedOn] = useState<string | null>(null)
   const open = openedOn === pathname
   const close = () => setOpenedOn(null)
@@ -125,11 +133,15 @@ function AccountMenu({ user }: { user: DashboardUser }) {
         </div>
         <div aria-hidden className="mx-2 h-px bg-forest/10" />
         <nav aria-label="Account" className="mt-2 flex flex-col gap-0.5">
-          <Link href="/dashboard" onClick={close} className={itemClass}>
+          <Link href={basePath} onClick={close} className={itemClass}>
             <LayoutGrid aria-hidden strokeWidth={1.75} className={iconClass} />
             Overview
           </Link>
-          <Link href="/dashboard/profile" onClick={close} className={itemClass}>
+          <Link
+            href={`${basePath}/profile`}
+            onClick={close}
+            className={itemClass}
+          >
             <User aria-hidden strokeWidth={1.75} className={iconClass} />
             My Profile
           </Link>
@@ -160,7 +172,13 @@ function AccountMenu({ user }: { user: DashboardUser }) {
   )
 }
 
-export function Topbar({ user }: { user: DashboardUser }) {
+export function Topbar({
+  user,
+  variant = "customer",
+}: {
+  user: DashboardUser
+  variant?: DashboardVariant
+}) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -185,7 +203,11 @@ export function Topbar({ user }: { user: DashboardUser }) {
           <SheetHeader className="sr-only p-0">
             <SheetTitle>Dashboard menu</SheetTitle>
           </SheetHeader>
-          <SidebarContent user={user} onNavigate={() => setOpen(false)} />
+          <SidebarContent
+            user={user}
+            variant={variant}
+            onNavigate={() => setOpen(false)}
+          />
         </SheetContent>
       </Sheet>
 
@@ -209,7 +231,7 @@ export function Topbar({ user }: { user: DashboardUser }) {
 
       <div className="ml-auto flex items-center gap-2">
         <Notifications />
-        <AccountMenu user={user} />
+        <AccountMenu user={user} variant={variant} />
       </div>
     </header>
   )

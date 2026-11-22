@@ -15,6 +15,7 @@ import { btn } from "@/lib/button-styles"
 import { cn } from "@/lib/utils"
 import { BookingRow } from "./booking-row"
 import { EmptyState } from "./empty-state"
+import { SegmentedFilter } from "./segmented-filter"
 
 const filters: {
   key: string
@@ -38,34 +39,12 @@ export function BookingsList({ bookings }: { bookings: Booking[] }) {
 
   return (
     <div>
-      {/* Segmented filter */}
-      <div
-        role="group"
-        aria-label="Filter bookings"
-        className="-mx-4 flex [scrollbar-width:none] gap-1 overflow-x-auto px-4 pb-1 sm:mx-0 sm:w-fit sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
-      >
-        <div className="flex gap-1 liquid-glass relative rounded-full p-1">
-          {filters.map(({ key, label }) => {
-            const active = key === filter
-            return (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setFilter(key)}
-                className={cn(
-                  "h-10 shrink-0 rounded-full px-4 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:outline-2 focus-visible:outline-sage motion-reduce:transition-none",
-                  active
-                    ? "bg-forest text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_6px_14px_-6px_rgb(38_58_50/0.6)]"
-                    : "text-ink-soft hover:bg-forest/10 hover:text-forest"
-                )}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      <SegmentedFilter
+        label="Filter bookings"
+        items={filters}
+        value={filter}
+        onChange={setFilter}
+      />
 
       <p aria-live="polite" className="sr-only">
         {visible.length} bookings

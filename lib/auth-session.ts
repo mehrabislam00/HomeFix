@@ -4,4 +4,6 @@ export type SessionUser = {
   email: string
   /** Profile picture URL. When missing, initials are shown. */
   image?: string
+  /** "customer" | "technician" — decides which dashboard the Navbar links to. */
+  role?: string
 }

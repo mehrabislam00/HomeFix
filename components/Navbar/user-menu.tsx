@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/popover"
 import { authClient } from "@/lib/auth-client"
 import type { SessionUser } from "@/lib/auth-session"
+import { dashboardHref } from "@/lib/dashboard-config"
 import { initialsOf } from "@/lib/dashboard-data"
 import { cn } from "@/lib/utils"
 
@@ -46,6 +47,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState("")
   const open = openedOn === pathname
+  const dashboard = dashboardHref(user.role)
 
   async function handleSignOut() {
     setSigningOut(true)
@@ -103,7 +105,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
 
         <nav aria-label="Account" className="mt-2 flex flex-col gap-0.5">
           <Link
-            href="/dashboard"
+            href={dashboard}
             onClick={() => setOpenedOn(null)}
             className={itemClass}
           >
@@ -115,7 +117,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
             Dashboard
           </Link>
           <Link
-            href="/dashboard/profile"
+            href={`${dashboard}/profile`}
             onClick={() => setOpenedOn(null)}
             className={itemClass}
           >

@@ -10,25 +10,41 @@ import {
 
 import { BlurFade } from "@/components/magic/blur-fade"
 
-const actions: { label: string; href: string; icon: LucideIcon }[] = [
+export type QuickAction = { label: string; href: string; icon: LucideIcon }
+
+export const customerQuickActions: QuickAction[] = [
   { label: "Explore services", href: "/services", icon: Search },
   {
     label: "View my bookings",
-    href: "/dashboard/bookings",
+    href: "/customer-dashboard/bookings",
     icon: CalendarCheck,
   },
-  { label: "Payment history", href: "/dashboard/payments", icon: CreditCard },
-  { label: "Update profile", href: "/dashboard/profile", icon: User },
+  {
+    label: "Payment history",
+    href: "/customer-dashboard/payments",
+    icon: CreditCard,
+  },
+  {
+    label: "Update profile",
+    href: "/customer-dashboard/profile",
+    icon: User,
+  },
 ]
 
-export function QuickActions() {
+export function QuickActions({
+  actions = customerQuickActions,
+  description = "Jump to what you need.",
+}: {
+  actions?: QuickAction[]
+  description?: string
+}) {
   return (
     <BlurFade fade={false} delay={0.18} y={16} className="h-full">
       <section className="glass-card relative h-full rounded-[1.75rem] p-5 sm:p-7">
         <h2 className="font-[family-name:var(--font-manrope)] text-xl font-extrabold tracking-tight text-forest">
           Quick actions
         </h2>
-        <p className="mt-1 text-sm text-ink-soft">Jump to what you need.</p>
+        <p className="mt-1 text-sm text-ink-soft">{description}</p>
         <ul className="mt-5 flex flex-col gap-3">
           {actions.map(({ label, href, icon: Icon }) => (
             <li key={href}>

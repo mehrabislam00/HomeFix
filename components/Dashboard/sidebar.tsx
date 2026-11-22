@@ -3,21 +3,14 @@
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  CalendarCheck,
-  CreditCard,
-  House,
-  LayoutGrid,
-  LogOut,
-  User,
-  type LucideIcon,
-} from "lucide-react"
+import { House, LogOut } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { initialsOf } from "@/lib/dashboard-data"
 import { cn } from "@/lib/utils"
 import logo from "@/assets/Logo.png"
 import { signOut } from "@/lib/Action/auth-actions"
+import { dashboardConfig, type DashboardVariant } from "@/lib/dashboard-config"
 
 export type DashboardUser = {
   name: string
@@ -26,15 +19,9 @@ export type DashboardUser = {
   email?: string
 }
 
-const nav: { label: string; href: string; icon: LucideIcon }[] = [
-  { label: "Overview", href: "/dashboard", icon: LayoutGrid },
-  { label: "My Bookings", href: "/dashboard/bookings", icon: CalendarCheck },
-  { label: "Payment History", href: "/dashboard/payments", icon: CreditCard },
-  { label: "Profile", href: "/dashboard/profile", icon: User },
-]
-
-export const isActive = (pathname: string, href: string) =>
-  href === "/dashboard"
+/** The overview link only matches its own path; the others also match sub-routes. */
+export const isActive = (pathname: string, href: string, basePath: string) =>
+  href === basePath
     ? pathname === href
     : pathname === href || pathname.startsWith(`${href}/`)
 
@@ -43,12 +30,15 @@ const linkBase =
 
 export function SidebarContent({
   user,
+  variant = "customer",
   onNavigate,
 }: {
   user: DashboardUser
+  variant?: DashboardVariant
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
+  const { label: dashboardLabel, basePath, nav } = dashboardConfig[variant]
 
   return (
     <div className="flex h-full flex-col">
@@ -68,7 +58,7 @@ export function SidebarContent({
       </Link>
       <p className="mt-3 inline-flex w-fit items-center gap-2 rounded-full bg-forest/[0.07] px-3 py-1 text-[11px] font-semibold tracking-wide text-forest uppercase">
         <span aria-hidden className="size-1.5 rounded-full bg-sage" />
-        Customer Dashboard
+        {dashboardLabel}
       </p>
 
       {/* Navigation */}
@@ -77,7 +67,7 @@ export function SidebarContent({
       </p>
       <nav aria-label="Dashboard" className="mt-2 flex flex-col gap-1">
         {nav.map(({ label, href, icon: Icon }) => {
-          const active = isActive(pathname, href)
+          const active = isActive(pathname, href, basePath)
           return (
             <Link
               key={href}

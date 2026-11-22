@@ -161,7 +161,7 @@ export function ProfileForm({
             </h2>
             <p className="mt-1 text-sm text-ink-soft">
               {editing
-                ? "Update the information on your customer profile."
+                ? "Update the information on your profile."
                 : "Your profile information and account details."}
             </p>
           </div>
@@ -308,7 +308,7 @@ export function ProfileForm({
             <FormField
               label="Account role"
               name="role"
-              value={customer.role === "customer" ? "Customer" : customer.role}
+              value={customer.role.charAt(0).toUpperCase() + customer.role.slice(1)}
               disabled
               readOnly
               className="[&_input]:bg-field/60 [&_input]:text-ink-soft"

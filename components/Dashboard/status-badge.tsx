@@ -30,6 +30,17 @@ const paymentMap: Record<
   paid: { label: "Paid", tone: "green" },
 }
 
+export type ServiceApproval = "approved" | "pending" | "rejected"
+
+const approvalMap: Record<
+  ServiceApproval,
+  { label: string; tone: keyof typeof tones }
+> = {
+  approved: { label: "Approved", tone: "green" },
+  pending: { label: "Pending Approval", tone: "amber" },
+  rejected: { label: "Rejected", tone: "red" },
+}
+
 function Pill({
   label,
   tone,
@@ -71,3 +82,11 @@ export const PaymentStatusBadge = ({
   status: PaymentStatus
   className?: string
 }) => <Pill {...paymentMap[status]} className={className} />
+
+export const ServiceApprovalBadge = ({
+  status,
+  className,
+}: {
+  status: ServiceApproval
+  className?: string
+}) => <Pill {...approvalMap[status]} className={className} />

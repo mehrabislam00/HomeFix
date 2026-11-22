@@ -1,11 +1,9 @@
-import React from 'react'
+import type { Metadata } from "next"
 
-const Profile = () => {
-  return (
-    <div>
-      
-    </div>
-  )
-}
+import { ProfilePage } from "@/components/Dashboard/profile-page"
+
+export const metadata: Metadata = { title: "Profile — HomeFix Technician" }
+
+const Profile = () => <ProfilePage role="technician" />
 
 export default Profile

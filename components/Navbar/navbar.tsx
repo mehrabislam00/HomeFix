@@ -20,6 +20,7 @@ import {
 import { authClient } from "@/lib/auth-client"
 import type { SessionUser } from "@/lib/auth-session"
 import { btn } from "@/lib/button-styles"
+import { dashboardHref } from "@/lib/dashboard-config"
 import { cn } from "@/lib/utils"
 import logo from "@/assets/Logo.png"
 import { UserMenu } from "./user-menu"
@@ -47,6 +48,7 @@ export function Navbar() {
         name: session.user.name,
         email: session.user.email,
         image: session.user.image ?? undefined,
+        role: session.user.role,
       }
     : null
   const reduce = useReducedMotion()
@@ -181,7 +183,7 @@ export function Navbar() {
                     )}
                     asChild
                   >
-                    <Link href="/dashboard">
+                    <Link href={dashboardHref(user.role)}>
                       <LayoutGrid aria-hidden className="size-4" />
                       Dashboard
                     </Link>

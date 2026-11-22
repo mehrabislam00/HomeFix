@@ -49,22 +49,30 @@ function asDate(value: unknown): string {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10)
 }
 
-async function getCustomerSession() {
+/** Roles that have a dashboard profile. Admin is intentionally excluded. */
+type ProfileRole = "customer" | "technician"
+
+const DASHBOARD_PATH: Record<ProfileRole, string> = {
+  customer: "/customer-dashboard",
+  technician: "/technician-dashboard",
+}
+
+async function getRoleSession(role: ProfileRole) {
   const session = await auth.api.getSession({
     headers: await headers(),
     query: { disableCookieCache: true },
   })
-  return session?.user.role === "customer" ? session : null
+  return session?.user.role === role ? session : null
 }
 
-export async function getCustomerProfile(): Promise<ProfileLoadResult> {
+async function loadProfile(role: ProfileRole): Promise<ProfileLoadResult> {
   try {
-    const session = await getCustomerSession()
+    const session = await getRoleSession(role)
     if (!session) {
       return {
         ok: false,
         unauthorized: true,
-        error: "Sign in with a customer account to access your profile.",
+        error: `Sign in with a ${role} account to access your profile.`,
       }
     }
 
@@ -82,11 +90,11 @@ export async function getCustomerProfile(): Promise<ProfileLoadResult> {
     }
 
     const apiId = typeof body._id === "string" ? body._id : body.id
-    if (apiId !== session.user.id || body.role !== "customer") {
+    if (apiId !== session.user.id || body.role !== role) {
       return {
         ok: false,
         unauthorized: true,
-        error: "Your customer profile could not be verified.",
+        error: `Your ${role} profile could not be verified.`,
       }
     }
     if (typeof body.name !== "string" || typeof body.email !== "string") {
@@ -98,7 +106,7 @@ export async function getCustomerProfile(): Promise<ProfileLoadResult> {
       email: body.email,
       emailVerified: body.emailVerified === true,
       image: asOptionalString(body.image) ?? asOptionalString(session.user.image),
-      role: "customer",
+      role,
       phone: asOptionalString(body.phone),
       address: asOptionalString(body.area),
       bio: asOptionalString(body.bio),
@@ -108,7 +116,7 @@ export async function getCustomerProfile(): Promise<ProfileLoadResult> {
 
     return { ok: true, customer }
   } catch (error) {
-    console.error("Unable to load customer profile.", error)
+    console.error(`Unable to load ${role} profile.`, error)
     return {
       ok: false,
       unauthorized: false,
@@ -117,9 +125,10 @@ export async function getCustomerProfile(): Promise<ProfileLoadResult> {
   }
 }
 
-export async function updateCustomerProfile(
+async function saveProfile(
+  role: ProfileRole,
   values: ProfileValues,
-  photo: File | null = null
+  photo: File | null
 ): Promise<ProfileResult> {
   let uploadedAvatar: Awaited<ReturnType<typeof storeProfileAvatar>> | null =
     null
@@ -130,7 +139,7 @@ export async function updateCustomerProfile(
   let userId = ""
 
   try {
-    const session = await getCustomerSession()
+    const session = await getRoleSession(role)
     if (!session) {
       return {
         ok: false,
@@ -192,7 +201,7 @@ export async function updateCustomerProfile(
 
     const result: unknown = await response.json()
     if (!isRecord(result) || result.matchedCount !== 1) {
-      throw new Error("The profile API did not update the customer record.")
+      throw new Error(`The profile API did not update the ${role} record.`)
     }
 
     if (uploadedAvatar) {
@@ -203,8 +212,8 @@ export async function updateCustomerProfile(
       }
     }
 
-    revalidatePath("/dashboard")
-    revalidatePath("/dashboard/profile")
+    revalidatePath(DASHBOARD_PATH[role])
+    revalidatePath(`${DASHBOARD_PATH[role]}/profile`)
     return { ok: true, image: uploadedAvatar?.image }
   } catch (error) {
     if (authUserUpdated && requestHeaders) {
@@ -230,10 +239,34 @@ export async function updateCustomerProfile(
     if (error instanceof InvalidProfileAvatarError) {
       return { ok: false, error: error.message }
     }
-    console.error("Unable to update customer profile.", error)
+    console.error(`Unable to update ${role} profile.`, error)
     return {
       ok: false,
       error: "Unable to save your profile. Please try again.",
     }
   }
+}
+
+/** Customer dashboard entry points (unchanged public API). */
+export async function getCustomerProfile(): Promise<ProfileLoadResult> {
+  return loadProfile("customer")
+}
+
+export async function updateCustomerProfile(
+  values: ProfileValues,
+  photo: File | null = null
+): Promise<ProfileResult> {
+  return saveProfile("customer", values, photo)
+}
+
+/** Technician dashboard entry points — same backend, technician role guard. */
+export async function getTechnicianProfile(): Promise<ProfileLoadResult> {
+  return loadProfile("technician")
+}
+
+export async function updateTechnicianProfile(
+  values: ProfileValues,
+  photo: File | null = null
+): Promise<ProfileResult> {
+  return saveProfile("technician", values, photo)
 }

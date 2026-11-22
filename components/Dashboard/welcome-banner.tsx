@@ -9,9 +9,15 @@ import { cn } from "@/lib/utils"
 export function WelcomeBanner({
   firstName,
   dateLabel,
+  subtitle = "Here's what's happening with your home services.",
+  action,
 }: {
   firstName: string
   dateLabel: string
+  /** Line under the heading. */
+  subtitle?: string
+  /** Replaces the default "Book a service" button (customer dashboard). */
+  action?: React.ReactNode
 }) {
   return (
     <BlurFade y={16}>
@@ -31,22 +37,24 @@ export function WelcomeBanner({
             Welcome back, {firstName}!
           </h1>
           <p className="mt-2 text-base text-white/75">
-            Here&apos;s what&apos;s happening with your home services.
+            {subtitle}
           </p>
         </div>
 
-        <Button
-          className={cn(
-            btn.lg,
-            "shine relative shrink-0 self-start overflow-hidden bg-ivory text-forest hover:bg-white sm:self-auto"
-          )}
-          asChild
-        >
-          <Link href="/services">
-            <Search aria-hidden className="size-4" />
-            Book a service
-          </Link>
-        </Button>
+        {action ?? (
+          <Button
+            className={cn(
+              btn.lg,
+              "shine relative shrink-0 self-start overflow-hidden bg-ivory text-forest hover:bg-white sm:self-auto"
+            )}
+            asChild
+          >
+            <Link href="/services">
+              <Search aria-hidden className="size-4" />
+              Book a service
+            </Link>
+          </Button>
+        )}
       </section>
     </BlurFade>
   )

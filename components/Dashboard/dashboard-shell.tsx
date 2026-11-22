@@ -1,12 +1,15 @@
+import type { DashboardVariant } from "@/lib/dashboard-config"
 import { SidebarContent, type DashboardUser } from "./sidebar"
 import { Topbar } from "./topbar"
 
 /** Glass sidebar + floating glass top bar + content area. No site Navbar / Footer. */
 export function DashboardShell({
   user,
+  variant = "customer",
   children,
 }: {
   user: DashboardUser
+  variant?: DashboardVariant
   children: React.ReactNode
 }) {
   return (
@@ -23,12 +26,12 @@ export function DashboardShell({
 
       <aside className="sticky top-0 hidden h-screen p-3 lg:block">
         <div className="liquid-glass relative h-full rounded-[1.75rem] p-4">
-          <SidebarContent user={user} />
+          <SidebarContent user={user} variant={variant} />
         </div>
       </aside>
 
       <div className="relative min-w-0">
-        <Topbar user={user} />
+        <Topbar user={user} variant={variant} />
         <main className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 sm:py-10">
           {children}
         </main>
