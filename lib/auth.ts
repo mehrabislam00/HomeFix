@@ -13,7 +13,7 @@ if (!uri || !username || !password) {
 const client = new MongoClient(uri, {
   auth: { username, password },
 });
-const db = client.db("HomeFix_DB");
+export const db = client.db("HomeFix_DB");
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -41,9 +41,33 @@ export const auth = betterAuth({
               type: ["customer", "technician"],
               input: true,
               defaultValue: "customer",
-            } 
+            },
+          phone: {
+            type: "string",
+            required: false,
+            input: true,
+          },
+          area: {
+            type: "string",
+            required: false,
+            input: true,
+          },
+          bio: {
+            type: "string",
+            required: false,
+            input: true,
+          },
         }
     },
+  databaseHooks: {
+    user: {
+      update: {
+        async before(user) {
+          if ("role" in user) return false
+        },
+      },
+    },
+  },
   database: mongodbAdapter(db, {
     client,
   }),

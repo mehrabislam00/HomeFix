@@ -3,11 +3,10 @@ import type { StaticImageData } from "next/image"
 import { allServices } from "@/lib/services-data"
 
 /**
- * Customer dashboard data layer.
+ * Customer dashboard booking and payment data.
  *
- * PLACEHOLDER: these async functions return sample records so the UI renders.
- * Replace the bodies with queries against your database / API (scoped to the signed-in
- * customer) — the pages and components only depend on the types below.
+ * Booking and payment records remain sample data until those APIs are available.
+ * The authenticated customer profile is loaded through lib/Action/users.ts.
  */
 
 export type BookingStatus =
@@ -47,10 +46,16 @@ export type Payment = {
 export type Customer = {
   name: string
   email: string
+  emailVerified: boolean
+  image?: string
+  role: string
   phone?: string
   address?: string
+  bio?: string
   /** ISO date, yyyy-MM-dd */
   memberSince: string
+  /** ISO date, yyyy-MM-dd */
+  profileUpdatedAt: string
 }
 
 export const ACTIVE_STATUSES: BookingStatus[] = [
@@ -58,14 +63,6 @@ export const ACTIVE_STATUSES: BookingStatus[] = [
   "accepted",
   "in_progress",
 ]
-
-export async function getCustomer(): Promise<Customer> {
-  return {
-    name: "Mehrab Islam",
-    email: "mehrab@example.com",
-    memberSince: "2026-11-21",
-  }
-}
 
 export async function getBookings(): Promise<Booking[]> {
   const service = allServices.find((s) => s.id === "split-ac-deep-servicing")!
