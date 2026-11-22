@@ -4,10 +4,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu } from "lucide-react"
+import { LayoutGrid, Menu } from "lucide-react"
 import { motion, useReducedMotion } from "motion/react"
 
 import { LiquidGlass } from "@/components/liquid-glass"
+
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -16,9 +17,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { authClient } from "@/lib/auth-client"
+import type { SessionUser } from "@/lib/auth-session"
 import { btn } from "@/lib/button-styles"
 import { cn } from "@/lib/utils"
 import logo from "@/assets/Logo.png"
+import { UserMenu } from "./user-menu"
 
 const links = [
   { label: "Home", href: "/" },
@@ -37,6 +41,14 @@ const useIsoLayoutEffect =
 
 export function Navbar() {
   const pathname = usePathname()
+  const { data: session, isPending } = authClient.useSession()
+  const user: SessionUser | null = session
+    ? {
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image ?? undefined,
+      }
+    : null
   const reduce = useReducedMotion()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
@@ -154,20 +166,46 @@ export function Navbar() {
 
             {/* Actions */}
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <Button
-                variant="ghost"
-                className={cn(
-                  btn.md,
-                  btn.ghost,
-                  "hidden hover:bg-forest/10 hover:text-forest hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.35)] sm:inline-flex"
-                )}
-                asChild
-              >
-                <Link href="/login">Sign In</Link>
-              </Button>
-              <Button className={cn(btn.md, btn.primary)} asChild>
-                <Link href="/register">Get Started</Link>
-              </Button>
+              {isPending ? (
+                <div
+                  aria-label="Loading account"
+                  role="status"
+                  className="size-10 animate-pulse rounded-full bg-forest/10"
+                />
+              ) : user ? (
+                <>
+                  <Button
+                    className={cn(
+                      btn.md,
+                      "hidden border border-forest/10 bg-pale-sage text-forest shadow-[inset_0_1px_0_rgb(255_255_255/0.8)] hover:bg-forest hover:text-white sm:inline-flex"
+                    )}
+                    asChild
+                  >
+                    <Link href="/dashboard">
+                      <LayoutGrid aria-hidden className="size-4" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                  <UserMenu user={user} />
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      btn.md,
+                      btn.ghost,
+                      "hidden hover:bg-forest/10 hover:text-forest hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.35)] sm:inline-flex"
+                    )}
+                    asChild
+                  >
+                    <Link href="/login">Sign In</Link>
+                  </Button>
+                  <Button className={cn(btn.md, btn.primary)} asChild>
+                    <Link href="/register">Get Started</Link>
+                  </Button>
+                </>
+              )}
 
               {/* Mobile menu */}
               <Sheet open={open} onOpenChange={setOpen}>
@@ -216,25 +254,27 @@ export function Navbar() {
                       )
                     })}
                   </ul>
-                  <div className="mt-auto flex flex-col gap-2 border-t border-line p-5">
-                    <Button
-                      className={cn(
-                        btn.lg,
-                        btn.outline,
-                        "bg-surface hover:bg-field"
-                      )}
-                      asChild
-                    >
-                      <Link href="/login" onClick={() => setOpen(false)}>
-                        Sign In
-                      </Link>
-                    </Button>
-                    <Button className={cn(btn.lg, btn.primary)} asChild>
-                      <Link href="/register" onClick={() => setOpen(false)}>
-                        Get Started
-                      </Link>
-                    </Button>
-                  </div>
+                  {!isPending && !user && (
+                    <div className="mt-auto flex flex-col gap-2 border-t border-line p-5">
+                      <Button
+                        className={cn(
+                          btn.lg,
+                          btn.outline,
+                          "bg-surface hover:bg-field"
+                        )}
+                        asChild
+                      >
+                        <Link href="/login" onClick={() => setOpen(false)}>
+                          Sign In
+                        </Link>
+                      </Button>
+                      <Button className={cn(btn.lg, btn.primary)} asChild>
+                        <Link href="/register" onClick={() => setOpen(false)}>
+                          Get Started
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
                 </SheetContent>
               </Sheet>
             </div>

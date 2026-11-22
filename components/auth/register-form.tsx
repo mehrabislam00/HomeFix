@@ -9,7 +9,6 @@ import { FormField } from "@/components/auth/form-field"
 import { GoogleAuth } from "@/components/auth/google-button"
 import { RolePicker } from "@/components/auth/role-picker"
 import {
-  NOT_CONNECTED,
   type AuthResult,
   type RegisterValues,
 } from "@/lib/auth-types"
@@ -19,6 +18,7 @@ import {
   required,
   type FieldErrors,
 } from "@/lib/validation"
+import { authClient } from "@/lib/auth-client"
 
 type Errors = FieldErrors<"name" | "email" | "password" | "confirm">
 
@@ -40,14 +40,14 @@ export function RegisterForm({
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const data = new FormData(e.currentTarget)
+    const formdata = new FormData(e.currentTarget)
     const values: RegisterValues = {
       role,
-      name: String(data.get("name") ?? ""),
-      email: String(data.get("email") ?? ""),
-      password: String(data.get("password") ?? ""),
+      name: String(formdata.get("name") ?? ""),
+      email: String(formdata.get("email") ?? ""),
+      password: String(formdata.get("password") ?? ""),
     }
-    const confirm = String(data.get("confirm") ?? "")
+    const confirm = String(formdata.get("confirm") ?? "")
 
     const next: Errors = {
       name: required("Full name")(values.name),
@@ -64,7 +64,33 @@ export function RegisterForm({
     if (Object.values(next).some(Boolean)) return
 
     setPending(true)
-    const result = onSubmit ? await onSubmit(values) : NOT_CONNECTED
+    let result: AuthResult
+
+    if (onSubmit) {
+      result = await onSubmit(values)
+    } else {
+      try {
+        const { error } = await authClient.signUp.email({
+          name: values.name,
+          email: values.email,
+          password: values.password,
+          role: values.role,
+          callbackURL: redirectTo,
+        })
+
+        result = error
+          ? { ok: false, error: error.message || "Unable to create your account." }
+          : { ok: true }
+      } catch (error) {
+        result = {
+          ok: false,
+          error: error instanceof Error
+            ? error.message
+            : "Unable to create your account.",
+        }
+      }
+    }
+
     setPending(false)
     if (result.ok) router.push(redirectTo)
     else setFormError(result.error)

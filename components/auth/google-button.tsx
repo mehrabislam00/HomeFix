@@ -6,7 +6,8 @@ import { Loader2 } from "lucide-react";
 
 import { AuthError } from "@/components/auth/auth-submit";
 import { Button } from "@/components/ui/button";
-import { NOT_CONNECTED, type AuthResult } from "@/lib/auth-types";
+import { authClient } from "@/lib/auth-client";
+import type { AuthResult } from "@/lib/auth-types";
 import { btn } from "@/lib/button-styles";
 import { cn } from "@/lib/utils";
 
@@ -44,10 +45,35 @@ export function GoogleAuth({
   async function handleClick() {
     setError("");
     setPending(true);
-    const result = onGoogleSignIn ? await onGoogleSignIn() : NOT_CONNECTED;
-    setPending(false);
-    if (result.ok) router.push(redirectTo);
-    else setError(result.error);
+
+    try {
+      if (onGoogleSignIn) {
+        const result = await onGoogleSignIn();
+        if (result.ok) router.push(redirectTo);
+        else setError(result.error);
+        return;
+      }
+
+      const { data, error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: redirectTo,
+        disableRedirect: true,
+      });
+
+      if (error) {
+        setError(error.message || "Unable to continue with Google.");
+      } else if (data?.url) {
+        window.location.assign(data.url);
+      } else {
+        setError("Google sign-in did not return an authorization URL.");
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Unable to continue with Google."
+      );
+    } finally {
+      setPending(false);
+    }
   }
 
   return (

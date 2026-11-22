@@ -7,11 +7,13 @@ import { Lock, Mail } from "lucide-react"
 import { AuthError, AuthSubmit } from "@/components/auth/auth-submit"
 import { FormField } from "@/components/auth/form-field"
 import { GoogleAuth } from "@/components/auth/google-button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 import {
-  NOT_CONNECTED,
   type AuthResult,
   type LoginValues,
 } from "@/lib/auth-types"
+import { authClient } from "@/lib/auth-client"
 import {
   email as validateEmail,
   password as validatePassword,
@@ -33,6 +35,7 @@ export function LoginForm({
   const [errors, setErrors] = useState<FieldErrors<keyof LoginValues>>({})
   const [formError, setFormError] = useState("")
   const [pending, setPending] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -40,6 +43,7 @@ export function LoginForm({
     const values: LoginValues = {
       email: String(data.get("email") ?? ""),
       password: String(data.get("password") ?? ""),
+      rememberMe,
     }
     const next = {
       email: validateEmail(values.email),
@@ -50,8 +54,32 @@ export function LoginForm({
     if (next.email || next.password) return
 
     setPending(true)
-    const result = onSubmit ? await onSubmit(values) : NOT_CONNECTED
-    setPending(false)
+    let result: AuthResult
+
+    try {
+      if (onSubmit) {
+        result = await onSubmit(values)
+      } else {
+        const { error } = await authClient.signIn.email({
+          email: values.email,
+          password: values.password,
+          rememberMe: values.rememberMe,
+          callbackURL: redirectTo,
+        })
+
+        result = error
+          ? { ok: false, error: error.message || "Unable to sign in." }
+          : { ok: true }
+      }
+    } catch (error) {
+      result = {
+        ok: false,
+        error: error instanceof Error ? error.message : "Unable to sign in.",
+      }
+    } finally {
+      setPending(false)
+    }
+
     if (result.ok) router.push(redirectTo)
     else setFormError(result.error)
   }
@@ -79,6 +107,20 @@ export function LoginForm({
           placeholder="Enter your password"
           error={errors.password}
         />
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="rememberMe"
+            checked={rememberMe}
+            onCheckedChange={(checked) => setRememberMe(checked === true)}
+            disabled={pending}
+          />
+          <Label
+            htmlFor="rememberMe"
+            className="cursor-pointer text-sm text-ink-soft"
+          >
+            Remember me
+          </Label>
+        </div>
         <AuthSubmit pending={pending}>Sign In</AuthSubmit>
       </form>
     </div>

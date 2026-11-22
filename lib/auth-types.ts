@@ -5,7 +5,11 @@
  */
 export type AuthResult = { ok: true } | { ok: false; error: string };
 
-export type LoginValues = { email: string; password: string };
+export type LoginValues = {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+};
 export type RegisterValues = {
   role: "customer" | "technician";
   name: string;
