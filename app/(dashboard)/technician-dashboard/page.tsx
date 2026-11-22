@@ -12,13 +12,11 @@ import {
   Wrench,
 } from "lucide-react"
 
-import { SampleDataNotice } from "@/components/Dashboard/sample-data-notice"
+
 import { QuickActions, type QuickAction } from "@/components/Dashboard/quick-actions"
 import { StatCard } from "@/components/Dashboard/stat-card"
 import { WelcomeBanner } from "@/components/Dashboard/welcome-banner"
-import { CompletionRate } from "@/components/Technician/completion-rate"
-import { EarningsSummaryCard } from "@/components/Technician/earnings-summary"
-import { JobSection } from "@/components/Technician/job-section"
+
 import { Button } from "@/components/ui/button"
 import { getTechnicianProfile } from "@/lib/Action/users"
 import { firstName } from "@/lib/dashboard-data"
@@ -31,6 +29,10 @@ import {
   summarizeEarnings,
 } from "@/lib/technician-data"
 import { cn, formatBDT } from "@/lib/utils"
+import { SampleDataNotice } from "@/components/Dashboard/sample-data-notice"
+import { JobSection } from "@/components/Technician/job-section"
+import { EarningsSummaryCard } from "@/components/Technician/earnings-summary"
+import { CompletionRate } from "@/components/Technician/completion-rate"
 
 export const metadata: Metadata = { title: "Overview — HomeFix Technician" }
 

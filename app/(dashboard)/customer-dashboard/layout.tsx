@@ -1,5 +1,6 @@
 import { RoleDashboardLayout } from "@/components/Dashboard/role-dashboard-layout"
 
+
 export const dynamic = "force-dynamic"
 
 /** Customer dashboard chrome. No site Navbar / Footer. */

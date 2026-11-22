@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { getOAuthState } from "better-auth/api";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 
@@ -16,6 +17,11 @@ const client = new MongoClient(uri, {
 export const db = client.db("HomeFix_DB");
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+type RegistrationRole = "customer" | "technician";
+
+function isRegistrationRole(role: unknown): role is RegistrationRole {
+  return role === "customer" || role === "technician";
+}
 
 if (Boolean(googleClientId) !== Boolean(googleClientSecret)) {
   throw new Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be configured together.");
@@ -61,6 +67,20 @@ export const auth = betterAuth({
     },
   databaseHooks: {
     user: {
+      create: {
+        async before(user) {
+          const oauthState = await getOAuthState<{ role?: unknown }>();
+          if (oauthState?.role !== undefined) {
+            if (!isRegistrationRole(oauthState.role)) return false;
+            return { data: { ...user, role: oauthState.role } };
+          }
+
+          if (user.role === undefined) {
+            return { data: { ...user, role: "customer" } };
+          }
+          if (!isRegistrationRole(user.role)) return false;
+        },
+      },
       update: {
         async before(user) {
           if ("role" in user) return false

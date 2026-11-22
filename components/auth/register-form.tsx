@@ -26,14 +26,16 @@ export function RegisterForm({
   onSubmit,
   onGoogleSignIn,
   redirectTo = "/",
+  initialRole = "customer",
 }: {
   onSubmit?: (values: RegisterValues) => Promise<AuthResult>
-  /** Starts your existing provider's Google flow; must create CUSTOMER accounts only. */
-  onGoogleSignIn?: () => Promise<AuthResult>
+  /** Starts your existing provider's Google flow using the selected public role. */
+  onGoogleSignIn?: (role?: RegisterValues["role"]) => Promise<AuthResult>
   redirectTo?: string
+  initialRole?: RegisterValues["role"]
 }) {
   const router = useRouter()
-  const [role, setRole] = useState<RegisterValues["role"]>("customer")
+  const [role, setRole] = useState<RegisterValues["role"]>(initialRole)
   const [errors, setErrors] = useState<Errors>({})
   const [formError, setFormError] = useState("")
   const [pending, setPending] = useState(false)
@@ -64,12 +66,11 @@ export function RegisterForm({
     if (Object.values(next).some(Boolean)) return
 
     setPending(true)
-    let result: AuthResult
-
-    if (onSubmit) {
-      result = await onSubmit(values)
-    } else {
-      try {
+    try {
+      let result: AuthResult
+      if (onSubmit) {
+        result = await onSubmit(values)
+      } else {
         const { error } = await authClient.signUp.email({
           name: values.name,
           email: values.email,
@@ -81,19 +82,24 @@ export function RegisterForm({
         result = error
           ? { ok: false, error: error.message || "Unable to create your account." }
           : { ok: true }
-      } catch (error) {
-        result = {
-          ok: false,
-          error: error instanceof Error
-            ? error.message
-            : "Unable to create your account.",
-        }
       }
-    }
 
-    setPending(false)
-    if (result.ok) router.push(redirectTo)
-    else setFormError(result.error)
+      if (result.ok) {
+        document.cookie =
+          "homefix-registration-role=; Path=/; Max-Age=0; SameSite=Lax"
+        router.push(redirectTo)
+      } else {
+        setFormError(result.error)
+      }
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "Unable to create your account."
+      )
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -101,11 +107,18 @@ export function RegisterForm({
       <GoogleAuth
         onGoogleSignIn={onGoogleSignIn}
         redirectTo={redirectTo}
-        note="Signing up with Google creates a Customer account."
+        role={role}
+        note="Your selected account type will be used."
       />
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
         <AuthError message={formError} />
-        <RolePicker value={role} onChange={setRole} />
+        <RolePicker
+          value={role}
+          onChange={(nextRole) => {
+            setRole(nextRole)
+            document.cookie = `homefix-registration-role=${nextRole}; Path=/; Max-Age=1800; SameSite=Lax`
+          }}
+        />
         <FormField
           label="Full name"
           name="name"

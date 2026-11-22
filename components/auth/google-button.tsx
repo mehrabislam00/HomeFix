@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { AuthError } from "@/components/auth/auth-submit";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
-import type { AuthResult } from "@/lib/auth-types";
+import type { AuthResult, RegisterValues } from "@/lib/auth-types";
 import { btn } from "@/lib/button-styles";
 import { cn } from "@/lib/utils";
 
@@ -25,17 +25,18 @@ function GoogleIcon({ className }: { className?: string }) {
 /**
  * "Continue with Google" + "OR" divider, shared by Sign In and Create Account.
  *
- * `onGoogleSignIn` should start your existing auth provider's Google flow. The server
- * must create / link the account with the CUSTOMER role only — Google must never grant
- * Admin (or Technician) privileges.
+ * The selected public role is carried in OAuth state for new accounts. Existing
+ * accounts keep their stored role; the server validates the role before creation.
  */
 export function GoogleAuth({
   onGoogleSignIn,
   redirectTo = "/",
+  role,
   note,
 }: {
-  onGoogleSignIn?: () => Promise<AuthResult>;
+  onGoogleSignIn?: (role?: RegisterValues["role"]) => Promise<AuthResult>;
   redirectTo?: string;
+  role?: RegisterValues["role"];
   note?: string;
 }) {
   const router = useRouter();
@@ -48,15 +49,21 @@ export function GoogleAuth({
 
     try {
       if (onGoogleSignIn) {
-        const result = await onGoogleSignIn();
-        if (result.ok) router.push(redirectTo);
-        else setError(result.error);
+        const result = await onGoogleSignIn(role);
+        if (result.ok) {
+          document.cookie =
+            "homefix-registration-role=; Path=/; Max-Age=0; SameSite=Lax";
+          router.push(redirectTo);
+        } else {
+          setError(result.error);
+        }
         return;
       }
 
       const { data, error } = await authClient.signIn.social({
         provider: "google",
         callbackURL: redirectTo,
+        ...(role ? { additionalData: { role } } : {}),
         disableRedirect: true,
       });
 

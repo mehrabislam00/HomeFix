@@ -20,11 +20,10 @@ export function CountUp({
   const reduce = useReducedMotion();
   const ref = useRef<HTMLSpanElement>(null);
   const visible = useInView(ref, { once: true, margin: "-60px" });
-  const [value, setValue] = useState(reduce ? to : 0);
+  const [value, setValue] = useState(0);
 
   useEffect(() => {
     if (reduce) {
-      setValue(to);
       return;
     }
     if (inView && !visible) return;
@@ -37,5 +36,9 @@ export function CountUp({
     return () => controls.stop();
   }, [to, duration, delay, reduce, inView, visible]);
 
-  return <span ref={ref} className="tabular-nums">{value.toFixed(decimals)}</span>;
+  return (
+    <span ref={ref} className="tabular-nums">
+      {(reduce ? to : value).toFixed(decimals)}
+    </span>
+  );
 }

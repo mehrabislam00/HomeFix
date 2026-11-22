@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 
 import { PageHeader } from "@/components/Dashboard/page-header"
+
+import { getJobRequests } from "@/lib/technician-data"
 import { SampleDataNotice } from "@/components/Dashboard/sample-data-notice"
 import { RequestsList } from "@/components/Technician/requests-list"
-import { getJobRequests } from "@/lib/technician-data"
 
 export const metadata: Metadata = {
   title: "Manage Requests — HomeFix Technician",

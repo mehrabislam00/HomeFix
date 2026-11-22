@@ -8,13 +8,14 @@ import { format, parseISO } from "date-fns"
 
 import { BlurFade } from "@/components/magic/blur-fade"
 import { EmptyState } from "@/components/Dashboard/empty-state"
-import { SegmentedFilter } from "@/components/Dashboard/segmented-filter"
+
 import { ServiceApprovalBadge } from "@/components/Dashboard/status-badge"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { btn } from "@/lib/button-styles"
 import type { TechnicianService } from "@/lib/technician-data"
 import { cn, formatBDT } from "@/lib/utils"
+import { SegmentedFilter } from "../Dashboard/segmented-filter"
 
 const tabs = [
   { key: "all", label: "All" },

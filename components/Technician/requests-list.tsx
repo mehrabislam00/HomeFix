@@ -6,7 +6,7 @@ import { ListChecks } from "lucide-react"
 import { BlurFade } from "@/components/magic/blur-fade"
 import { AuthError } from "@/components/auth/auth-submit"
 import { EmptyState } from "@/components/Dashboard/empty-state"
-import { SegmentedFilter } from "@/components/Dashboard/segmented-filter"
+
 import {
   REQUEST_TABS,
   type JobAction,
@@ -14,6 +14,7 @@ import {
   type JobRequest,
 } from "@/lib/technician-data"
 import { JobRow } from "./job-row"
+import { SegmentedFilter } from "../Dashboard/segmented-filter"
 
 const emptyCopy: Record<string, { title: string; description: string }> = {
   new: {

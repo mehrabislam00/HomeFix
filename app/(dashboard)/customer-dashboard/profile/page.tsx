@@ -1,6 +1,7 @@
+import { ProfilePage } from "@/components/Dashboard/profile-page"
 import type { Metadata } from "next"
 
-import { ProfilePage } from "@/components/Dashboard/profile-page"
+
 
 export const metadata: Metadata = { title: "Profile — HomeFix" }
 
