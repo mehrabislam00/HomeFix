@@ -18,7 +18,7 @@ import { StatCard } from "@/components/Dashboard/stat-card"
 import { WelcomeBanner } from "@/components/Dashboard/welcome-banner"
 
 import { Button } from "@/components/ui/button"
-import { getTechnicianProfile } from "@/lib/Action/users"
+import { getTechnicianProfile } from "@/lib/Action/technician-actions"
 import { firstName } from "@/lib/dashboard-data"
 import { btn } from "@/lib/button-styles"
 import {

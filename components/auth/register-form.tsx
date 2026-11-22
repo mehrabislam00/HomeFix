@@ -25,7 +25,7 @@ type Errors = FieldErrors<"name" | "email" | "password" | "confirm">
 export function RegisterForm({
   onSubmit,
   onGoogleSignIn,
-  redirectTo = "/",
+  redirectTo = "/auth/complete",
   initialRole = "customer",
 }: {
   onSubmit?: (values: RegisterValues) => Promise<AuthResult>
@@ -87,7 +87,7 @@ export function RegisterForm({
       if (result.ok) {
         document.cookie =
           "homefix-registration-role=; Path=/; Max-Age=0; SameSite=Lax"
-        router.push(redirectTo)
+        router.replace(redirectTo)
       } else {
         setFormError(result.error)
       }

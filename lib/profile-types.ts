@@ -14,4 +14,9 @@ export type ProfileResult =
 
 export type ProfileLoadResult =
   | { ok: true; customer: Customer }
-  | { ok: false; unauthorized: boolean; error: string }
+  | {
+      ok: false
+      unauthorized: boolean
+      error: string
+      redirectTo?: string
+    }

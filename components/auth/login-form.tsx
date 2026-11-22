@@ -23,7 +23,7 @@ import {
 export function LoginForm({
   onSubmit,
   onGoogleSignIn,
-  redirectTo = "/",
+  redirectTo = "/auth/complete",
 }: {
   onSubmit?: (values: LoginValues) => Promise<AuthResult>
   /** Starts your existing provider's Google flow (customer accounts only). */
@@ -80,7 +80,7 @@ export function LoginForm({
       setPending(false)
     }
 
-    if (result.ok) router.push(redirectTo)
+    if (result.ok) router.replace(redirectTo)
     else setFormError(result.error)
   }
 

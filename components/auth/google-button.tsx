@@ -30,7 +30,7 @@ function GoogleIcon({ className }: { className?: string }) {
  */
 export function GoogleAuth({
   onGoogleSignIn,
-  redirectTo = "/",
+  redirectTo = "/auth/complete",
   role,
   note,
 }: {
@@ -53,7 +53,7 @@ export function GoogleAuth({
         if (result.ok) {
           document.cookie =
             "homefix-registration-role=; Path=/; Max-Age=0; SameSite=Lax";
-          router.push(redirectTo);
+          router.replace(redirectTo);
         } else {
           setError(result.error);
         }

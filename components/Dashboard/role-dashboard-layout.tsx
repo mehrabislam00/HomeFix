@@ -2,7 +2,8 @@ import { redirect } from "next/navigation"
 
 import { DashboardShell } from "@/components/Dashboard/dashboard-shell"
 import type { DashboardVariant } from "@/lib/dashboard-config"
-import { getCustomerProfile, getTechnicianProfile } from "@/lib/Action/users"
+import { getCustomerProfile } from "@/lib/Action/customer-actions"
+import { getTechnicianProfile } from "@/lib/Action/technician-actions"
 
 const loaders = {
   customer: getCustomerProfile,
@@ -23,7 +24,9 @@ export async function RoleDashboardLayout({
   children: React.ReactNode
 }) {
   const result = await loaders[variant]()
-  if (!result.ok && result.unauthorized) redirect("/login")
+  if (!result.ok && result.unauthorized) {
+    redirect(result.redirectTo ?? "/login")
+  }
 
   const role = roleLabel[variant]
   const user = result.ok

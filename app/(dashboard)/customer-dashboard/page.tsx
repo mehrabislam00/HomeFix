@@ -8,7 +8,7 @@ import {
   firstName,
   getBookings,
 } from "@/lib/dashboard-data"
-import { getCustomerProfile } from "@/lib/Action/users"
+import { getCustomerProfile } from "@/lib/Action/customer-actions"
 import { WelcomeBanner } from "@/components/Dashboard/welcome-banner"
 import { StatCard } from "@/components/Dashboard/stat-card"
 import { RecentBookings } from "@/components/Dashboard/recent-bookings"
@@ -22,7 +22,9 @@ const Dashboard = async () => {
     getCustomerProfile(),
     getBookings(),
   ])
-  if (!profile.ok && profile.unauthorized) redirect("/login")
+  if (!profile.ok && profile.unauthorized) {
+    redirect(profile.redirectTo ?? "/login")
+  }
   if (!profile.ok) {
     return (
       <p

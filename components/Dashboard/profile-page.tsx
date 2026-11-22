@@ -5,10 +5,12 @@ import { ProfileCard } from "@/components/Dashboard/profile-card"
 import { ProfileForm } from "@/components/Dashboard/profile-form"
 import {
   getCustomerProfile,
-  getTechnicianProfile,
   updateCustomerProfile,
+} from "@/lib/Action/customer-actions"
+import {
+  getTechnicianProfile,
   updateTechnicianProfile,
-} from "@/lib/Action/users"
+} from "@/lib/Action/technician-actions"
 
 const roles = {
   customer: { load: getCustomerProfile, save: updateCustomerProfile },
@@ -23,7 +25,9 @@ export async function ProfilePage({
 }) {
   const { load, save } = roles[role]
   const result = await load()
-  if (!result.ok && result.unauthorized) redirect("/login")
+  if (!result.ok && result.unauthorized) {
+    redirect(result.redirectTo ?? "/login")
+  }
 
   const header = (
     <PageHeader

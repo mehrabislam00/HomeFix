@@ -6,7 +6,7 @@ import { allServices } from "@/lib/services-data"
  * Customer dashboard booking and payment data.
  *
  * Booking and payment records remain sample data until those APIs are available.
- * The authenticated customer profile is loaded through lib/Action/users.ts.
+ * The authenticated customer profile is loaded through role-specific user actions.
  */
 
 export type BookingStatus =
