@@ -3,7 +3,6 @@ import Link from "next/link"
 import { format, parseISO } from "date-fns"
 import { CalendarDays, Eye } from "lucide-react"
 
-
 import { Button } from "@/components/ui/button"
 import type { Booking } from "@/lib/dashboard-data"
 import { btn } from "@/lib/button-styles"
@@ -35,8 +34,8 @@ export function BookingRow({
       className={cn(
         "group flex items-center gap-4 rounded-3xl transition-colors duration-200",
         compact
-          ? "p-2 hover:bg-forest/5"
-          : "glass-card relative p-4 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 sm:p-5"
+          ? "border border-transparent p-2 hover:border-white/80 hover:bg-white/60"
+          : "glass-card relative flex-wrap p-4 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 sm:flex-nowrap sm:p-5"
       )}
     >
       <div
@@ -91,7 +90,7 @@ export function BookingRow({
           className={cn(
             btn.md,
             btn.secondary,
-            "shrink-0 border border-forest/10 bg-pale-sage hover:bg-forest hover:text-white"
+            "shrink-0 border border-white/80 bg-white/70 text-forest shadow-[inset_0_1px_0_rgb(255_255_255/0.9)] hover:bg-forest hover:text-white"
           )}
           asChild
         >

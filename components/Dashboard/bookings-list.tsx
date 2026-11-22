@@ -4,7 +4,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { CalendarCheck } from "lucide-react"
 
-
 import { BlurFade } from "@/components/magic/blur-fade"
 import { Button } from "@/components/ui/button"
 import {
@@ -45,7 +44,7 @@ export function BookingsList({ bookings }: { bookings: Booking[] }) {
         aria-label="Filter bookings"
         className="-mx-4 flex [scrollbar-width:none] gap-1 overflow-x-auto px-4 pb-1 sm:mx-0 sm:w-fit sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
       >
-        <div className="flex gap-1 rounded-full border border-white/70 bg-pale-sage p-1 shadow-[inset_0_1px_0_rgb(255_255_255/0.8)]">
+        <div className="flex gap-1 liquid-glass relative rounded-full p-1">
           {filters.map(({ key, label }) => {
             const active = key === filter
             return (

@@ -1,7 +1,6 @@
 import { format, parseISO } from "date-fns"
 import { CreditCard, ReceiptText } from "lucide-react"
 
-
 import { BlurFade } from "@/components/magic/blur-fade"
 import type { Payment } from "@/lib/dashboard-data"
 import { formatBDT } from "@/lib/utils"
@@ -19,13 +18,13 @@ export function PaymentsList({ payments }: { payments: Payment[] }) {
             description="Payments for completed jobs will appear here."
           />
         ) : (
-          <ul className="divide-y divide-forest/10">
+          <ul className="flex flex-col gap-1">
             {payments.map((p) => (
               <li
                 key={p.id}
-                className="flex items-center gap-4 py-4 first:pt-1 last:pb-1"
+                className="group/row -mx-2 flex items-center gap-4 rounded-2xl px-2 py-4 transition-colors hover:bg-white/60"
               >
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-pale-sage text-forest ring-1 ring-forest/10">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-pale-sage text-forest ring-1 ring-forest/10 transition-transform duration-300 group-hover/row:scale-105">
                   <ReceiptText
                     aria-hidden
                     strokeWidth={1.75}

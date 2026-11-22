@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import {
+  CircleCheck,
   Loader2,
   MapPin,
   Pencil,
@@ -175,7 +176,7 @@ export function ProfileForm({
               className={cn(
                 btn.md,
                 btn.outline,
-                "shrink-0 bg-surface hover:bg-field"
+                "shrink-0 bg-white/70 hover:bg-white"
               )}
             >
               <Pencil aria-hidden className="size-4" />
@@ -192,7 +193,7 @@ export function ProfileForm({
           <AuthError message={formError} />
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <div className="flex items-center gap-4 rounded-2xl border border-line bg-surface/70 p-4 sm:col-span-2">
+            <div className="flex items-center gap-4 flex-wrap rounded-2xl border border-white/80 bg-white/55 p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.9)] sm:col-span-2 sm:flex-nowrap">
               <Avatar size="lg" className="size-16 ring-2 ring-white">
                 {photoPreview && (
                   <AvatarImage
@@ -235,7 +236,7 @@ export function ProfileForm({
                 variant="outline"
                 disabled={!editing || pending}
                 onClick={() => photoInput.current?.click()}
-                className="shrink-0 rounded-xl border-line-strong bg-surface text-forest hover:bg-field"
+                className="shrink-0 rounded-xl border-white/80 bg-white/70 text-forest hover:bg-forest hover:text-white"
               >
                 <Upload aria-hidden className="size-4" />
                 {savedImage || photo ? "Replace" : "Upload"}
@@ -301,7 +302,7 @@ export function ProfileForm({
                 }}
                 disabled={!editing || pending}
                 placeholder="Not provided"
-                className="mt-2 min-h-24 rounded-xl border-line-strong bg-surface text-ink placeholder:text-ink-soft/60 focus-visible:border-sage focus-visible:ring-4 focus-visible:ring-sage/20 disabled:bg-field/60"
+                className="mt-2 min-h-24 rounded-xl border-white/80 bg-white/60 text-ink placeholder:text-ink-soft/60 focus-visible:border-sage focus-visible:ring-4 focus-visible:ring-sage/20 disabled:bg-field/60"
               />
             </div>
             <FormField
@@ -318,8 +319,9 @@ export function ProfileForm({
             {success && (
               <p
                 role="status"
-                className="mr-auto text-sm font-medium text-status-success-fg"
+                className="mr-auto inline-flex items-center gap-2 rounded-full bg-status-success-bg px-3 py-1.5 text-sm font-medium text-status-success-fg"
               >
+                <CircleCheck aria-hidden className="size-4" />
                 Changes saved
               </p>
             )}
@@ -338,7 +340,7 @@ export function ProfileForm({
                   className={cn(
                     btn.lg,
                     btn.outline,
-                    "bg-surface hover:bg-field"
+                    "bg-white/70 hover:bg-white"
                   )}
                 >
                   Cancel

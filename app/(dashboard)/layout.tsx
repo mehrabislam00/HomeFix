@@ -17,6 +17,7 @@ export default async function DashboardLayout({
         name: result.customer.name,
         role: "Customer",
         image: result.customer.image,
+        email: result.customer.email,
       }
     : { name: "Customer", role: "Customer" }
 

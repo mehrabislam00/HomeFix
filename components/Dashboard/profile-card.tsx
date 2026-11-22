@@ -16,10 +16,14 @@ export function ProfileCard({ customer }: { customer: Customer }) {
 
   return (
     <BlurFade fade={false} delay={0.05} y={16}>
-      <section className="glass-card relative rounded-[1.75rem] p-6 text-center sm:p-7">
+      <section className="glass-card relative overflow-hidden rounded-[1.75rem] p-6 text-center sm:p-7">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-sage/25 to-transparent"
+        />
         <Avatar
           size="lg"
-          className="mx-auto size-28 rounded-full bg-sage text-4xl font-extrabold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_16px_32px_-14px_rgb(38_58_50/0.55)] ring-4 ring-white"
+          className="relative mx-auto size-28 rounded-full bg-sage text-4xl font-extrabold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_16px_32px_-14px_rgb(38_58_50/0.55)] ring-4 ring-white"
         >
           {customer.image && (
             <AvatarImage src={customer.image} alt={customer.name} />

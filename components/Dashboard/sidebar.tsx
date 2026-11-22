@@ -19,6 +19,13 @@ import { cn } from "@/lib/utils"
 import logo from "@/assets/Logo.png"
 import { signOut } from "@/lib/Action/auth-actions"
 
+export type DashboardUser = {
+  name: string
+  role: string
+  image?: string
+  email?: string
+}
+
 const nav: { label: string; href: string; icon: LucideIcon }[] = [
   { label: "Overview", href: "/dashboard", icon: LayoutGrid },
   { label: "My Bookings", href: "/dashboard/bookings", icon: CalendarCheck },
@@ -26,45 +33,49 @@ const nav: { label: string; href: string; icon: LucideIcon }[] = [
   { label: "Profile", href: "/dashboard/profile", icon: User },
 ]
 
-const isActive = (pathname: string, href: string) =>
+export const isActive = (pathname: string, href: string) =>
   href === "/dashboard"
     ? pathname === href
     : pathname === href || pathname.startsWith(`${href}/`)
 
 const linkBase =
-  "relative flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage"
+  "group relative flex h-11 items-center gap-3 rounded-2xl px-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage motion-reduce:transition-none"
 
 export function SidebarContent({
   user,
   onNavigate,
 }: {
-  user: { name: string; role: string; image?: string }
+  user: DashboardUser
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
 
   return (
     <div className="flex h-full flex-col">
+      {/* Brand */}
       <Link
         href="/"
         onClick={onNavigate}
         aria-label="HomeFix home"
-        className="flex items-center gap-2 px-2 pt-1"
+        className="flex items-center gap-2 rounded-2xl px-2 pt-1 focus-visible:outline-2 focus-visible:outline-sage"
       >
         <Image
           src={logo}
           alt="HomeFix"
           priority
-          className="h-12 w-auto object-contain"
+          className="h-11 w-auto object-contain"
         />
-        <span className="-ml-2 text-[11px] leading-tight font-medium text-ink-soft">
-          Customer
-          <br />
-          Dashboard
-        </span>
       </Link>
+      <p className="mt-3 inline-flex w-fit items-center gap-2 rounded-full bg-forest/[0.07] px-3 py-1 text-[11px] font-semibold tracking-wide text-forest uppercase">
+        <span aria-hidden className="size-1.5 rounded-full bg-sage" />
+        Customer Dashboard
+      </p>
 
-      <nav aria-label="Dashboard" className="mt-6 flex flex-col gap-1">
+      {/* Navigation */}
+      <p className="mt-7 px-3 text-[11px] font-semibold tracking-wider text-ink-muted uppercase">
+        Menu
+      </p>
+      <nav aria-label="Dashboard" className="mt-2 flex flex-col gap-1">
         {nav.map(({ label, href, icon: Icon }) => {
           const active = isActive(pathname, href)
           return (
@@ -76,36 +87,50 @@ export function SidebarContent({
               className={cn(
                 linkBase,
                 active
-                  ? "bg-pale-sage font-semibold text-forest shadow-[inset_0_1px_0_rgb(255_255_255/0.8)]"
-                  : "text-ink-soft hover:bg-forest/10 hover:text-forest"
+                  ? "border border-white/80 bg-white/70 font-semibold text-forest shadow-[inset_0_1px_0_rgb(255_255_255/0.95),0_10px_20px_-14px_rgb(38_58_50/0.5)]"
+                  : "border border-transparent text-ink-soft hover:bg-forest/[0.07] hover:text-forest"
               )}
             >
               {active && (
                 <span
                   aria-hidden
-                  className="absolute top-2.5 bottom-2.5 -left-3 w-1 rounded-r-full bg-forest"
+                  className="absolute top-3 bottom-3 -left-1.5 w-1 rounded-full bg-forest"
                 />
               )}
-              <Icon aria-hidden strokeWidth={1.75} className="size-[18px]" />
+              <span
+                className={cn(
+                  "flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors duration-200",
+                  active
+                    ? "bg-forest text-white"
+                    : "bg-pale-sage/70 text-sage-deep group-hover:bg-forest/10 group-hover:text-forest"
+                )}
+              >
+                <Icon aria-hidden strokeWidth={1.75} className="size-[17px]" />
+              </span>
               {label}
             </Link>
           )
         })}
-        <Link
-          href="/"
-          onClick={onNavigate}
-          className={cn(
-            linkBase,
-            "text-ink-soft hover:bg-forest/10 hover:text-forest"
-          )}
-        >
-          <House aria-hidden strokeWidth={1.75} className="size-[18px]" />
-          Back to site
-        </Link>
       </nav>
 
+      <div aria-hidden className="mx-3 my-4 h-px bg-forest/10" />
+      <Link
+        href="/"
+        onClick={onNavigate}
+        className={cn(
+          linkBase,
+          "border border-transparent text-ink-soft hover:bg-forest/[0.07] hover:text-forest"
+        )}
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-pale-sage/70 text-sage-deep transition-colors group-hover:bg-forest/10 group-hover:text-forest">
+          <House aria-hidden strokeWidth={1.75} className="size-[17px]" />
+        </span>
+        Back to site
+      </Link>
+
+      {/* User */}
       <div className="glass-card relative mt-auto flex items-center gap-3 rounded-2xl p-3">
-        <Avatar size="lg">
+        <Avatar size="lg" className="ring-2 ring-white">
           {user.image && <AvatarImage src={user.image} alt={user.name} />}
           <AvatarFallback className="bg-sage text-xs font-semibold text-white">
             {initialsOf(user.name)}
@@ -121,7 +146,8 @@ export function SidebarContent({
           <button
             type="submit"
             aria-label="Sign out"
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-forest/10 hover:text-forest focus-visible:outline-2 focus-visible:outline-sage"
+            title="Sign out"
+            className="flex size-9 shrink-0 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-status-rejected-bg hover:text-status-rejected-fg focus-visible:outline-2 focus-visible:outline-sage"
           >
             <LogOut aria-hidden className="size-4" />
           </button>

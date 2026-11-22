@@ -15,7 +15,7 @@ export function WelcomeBanner({
 }) {
   return (
     <BlurFade y={16}>
-      <section className="relative flex flex-col gap-6 overflow-hidden rounded-[2rem] bg-forest px-6 py-8 shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_30px_70px_-36px_rgb(38_58_50/0.6)] sm:flex-row sm:items-center sm:justify-between sm:px-10 sm:py-10">
+      <section className="relative flex flex-col gap-6 overflow-hidden rounded-[2rem] border border-white/10 bg-forest px-6 py-8 shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_30px_70px_-36px_rgb(38_58_50/0.6)] sm:flex-row sm:items-center sm:justify-between sm:px-10 sm:py-10">
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -top-24 -right-16 size-[360px] rounded-full bg-sage/30 blur-3xl" />
           <div className="absolute -bottom-28 left-1/3 size-[260px] rounded-full bg-muted-sage/15 blur-3xl" />
@@ -23,8 +23,11 @@ export function WelcomeBanner({
         </div>
 
         <div className="relative">
-          <p className="text-sm text-white/70">{dateLabel}</p>
-          <h1 className="mt-1 font-[family-name:var(--font-manrope)] text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+          <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-md">
+            <span aria-hidden className="size-1.5 rounded-full bg-sage" />
+            {dateLabel}
+          </p>
+          <h1 className="mt-4 font-[family-name:var(--font-manrope)] text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
             Welcome back, {firstName}!
           </h1>
           <p className="mt-2 text-base text-white/75">
