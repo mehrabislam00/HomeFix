@@ -133,7 +133,7 @@ flowchart LR
   dashboards.
 - Server Actions and server-side API clients communicate with the backend.
 - Better Auth provides email/password and optional Google authentication.
-- Backend requests use the server-only `HOMEFIX_BACKEND_API_URL` setting.
+- Backend requests use `NEXT_PUBLIC_API_BASE_URL`, read only by server-only code.
 
 ### Backend
 
@@ -220,7 +220,7 @@ server-side environment settings for production.
 | Variable | Required | Description |
 | --- | :---: | --- |
 | `BETTER_AUTH_URL` | ✅ | Canonical URL of the HomeFix application |
-| `HOMEFIX_BACKEND_API_URL` | ✅ | Base URL of the HomeFix backend API |
+| `NEXT_PUBLIC_API_BASE_URL` | ✅ | Base URL of the HomeFix backend API; consumed only by server code |
 | `MONGODB_URI` | ✅ | MongoDB connection URI |
 | `MONGODB_USERNAME` | ✅ | MongoDB username |
 | `MONGODB_PASSWORD` | ✅ | MongoDB password |
@@ -229,10 +229,11 @@ server-side environment settings for production.
 | `STRIPE_SECRET_KEY` | For payments | Stripe secret key used by the frontend server |
 | `HOMEFIX_PAYMENT_API_SECRET` | For signed API requests | Shared API-signing secret; configure the matching backend value |
 
-In production, `BETTER_AUTH_URL` and `HOMEFIX_BACKEND_API_URL` must use HTTPS
-and non-localhost hosts. The backend URL is intentionally server-only; do not
-put it in a `NEXT_PUBLIC_*` variable. The backend also needs its Stripe webhook
-configuration; see the backend repository.
+In production, `BETTER_AUTH_URL` and `NEXT_PUBLIC_API_BASE_URL` must use HTTPS
+and non-localhost hosts. Although the existing backend URL variable has a
+`NEXT_PUBLIC_` prefix, the application reads it only in server-only modules;
+it is never used by client components. The backend also needs its Stripe
+webhook configuration; see the backend repository.
 
 > [!IMPORTANT]
 >
@@ -259,7 +260,7 @@ The live frontend is hosted on **Vercel**. To deploy:
 1. Import the client repository into Vercel.
 2. Set the required production environment variables in the Vercel project.
 3. Use the deployed frontend URL for `BETTER_AUTH_URL`.
-4. Set `HOMEFIX_BACKEND_API_URL` to the HTTPS backend URL.
+4. Set `NEXT_PUBLIC_API_BASE_URL` to the HTTPS backend URL.
 5. Configure Google OAuth and Stripe for the production URLs.
 6. Confirm the backend's database access and matching API-signing secret.
 7. Deploy and verify authentication, API access, and payment flows.

@@ -1,6 +1,15 @@
 import "server-only"
 
 const DEVELOPMENT_BACKEND_API_URL = "http://localhost:5000"
+const BACKEND_API_URL_ENV = "NEXT_PUBLIC_API_BASE_URL"
+const LEGACY_BACKEND_API_URL_ENV = "HOMEFIX_BACKEND_API_URL"
+
+function isProductionRuntime() {
+  return (
+    process.env.NODE_ENV === "production" &&
+    process.env.NEXT_PHASE !== "phase-production-build"
+  )
+}
 
 function isLoopbackHostname(hostname: string) {
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, "")
@@ -39,7 +48,7 @@ export function assertProductionHttpsUrl(
   name: string,
   value: string | undefined
 ) {
-  if (process.env.NODE_ENV !== "production") return
+  if (!isProductionRuntime()) return
   if (!value) {
     throw new Error(`${name} must be configured for production.`)
   }
@@ -51,21 +60,24 @@ export function assertProductionHttpsUrl(
 }
 
 export function backendApiBaseUrl() {
-  const configuredUrl = process.env.HOMEFIX_BACKEND_API_URL?.trim()
-  if (process.env.NODE_ENV === "production" && !configuredUrl) {
+  const configuredUrl =
+    process.env[BACKEND_API_URL_ENV]?.trim() ||
+    process.env[LEGACY_BACKEND_API_URL_ENV]?.trim()
+  const productionRuntime = isProductionRuntime()
+  if (productionRuntime && !configuredUrl) {
     throw new Error(
-      "HOMEFIX_BACKEND_API_URL must be configured for production."
+      `${BACKEND_API_URL_ENV} must be configured for production.`
     )
   }
 
   const value = configuredUrl || DEVELOPMENT_BACKEND_API_URL
-  const url = parseBaseUrl(value, "HOMEFIX_BACKEND_API_URL")
+  const url = parseBaseUrl(value, BACKEND_API_URL_ENV)
   if (
-    process.env.NODE_ENV === "production" &&
+    productionRuntime &&
     (url.protocol !== "https:" || isLoopbackHostname(url.hostname))
   ) {
     throw new Error(
-      "HOMEFIX_BACKEND_API_URL must use HTTPS and a non-localhost host in production."
+      `${BACKEND_API_URL_ENV} must use HTTPS and a non-localhost host in production.`
     )
   }
 
