@@ -2,7 +2,10 @@ import { betterAuth } from "better-auth";
 import { getOAuthState } from "better-auth/api";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
-import { assertProductionHttpsUrl } from "@/lib/server-api-config";
+import {
+  assertProductionHttpsUrl,
+  backendApiBaseUrl,
+} from "@/lib/server-api-config";
 
 const uri = process.env.MONGODB_URI;
 const username = process.env.MONGODB_USERNAME;
@@ -22,6 +25,12 @@ const client =
   globalForMongo.homeFixMongoClient ??
   new MongoClient(uri, {
     auth: { username, password },
+    maxPoolSize: 5,
+    maxConnecting: 2,
+    minPoolSize: 0,
+    maxIdleTimeMS: 60_000,
+    serverSelectionTimeoutMS: 8_000,
+    connectTimeoutMS: 8_000,
   });
 globalForMongo.homeFixMongoClient = client;
 export const db = client.db("HomeFix_DB");
@@ -89,6 +98,38 @@ export const auth = betterAuth({
             return { data: { ...user, role: "customer" } };
           }
           if (!isRegistrationRole(user.role)) return false;
+        },
+        async after(user) {
+          if (!isRegistrationRole(user.role)) return;
+          const secret = process.env.HOMEFIX_PAYMENT_API_SECRET;
+          if (!secret) {
+            console.error(
+              "Registration notification is not configured: HOMEFIX_PAYMENT_API_SECRET is missing."
+            );
+            return;
+          }
+          try {
+            const response = await fetch(
+              `${backendApiBaseUrl()}/notifications/user-registered`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-homefix-notification-secret": secret,
+                },
+                body: JSON.stringify({ userId: user.id }),
+                cache: "no-store",
+                signal: AbortSignal.timeout(4_000),
+              }
+            );
+            if (!response.ok) {
+              console.error(
+                `Registration notification request failed with HTTP ${response.status}.`
+              );
+            }
+          } catch (error) {
+            console.error("Unable to send the registration notification.", error);
+          }
         },
       },
       update: {
