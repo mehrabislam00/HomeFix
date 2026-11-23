@@ -3,10 +3,7 @@ import "server-only"
 import {
   authenticatedBackendFetch,
 } from "@/lib/server-jwt"
-
-const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
-).replace(/\/+$/, "")
+import { backendApiBaseUrl } from "@/lib/server-api-config"
 
 export class ServiceBookingApiError extends Error {
   constructor(
@@ -39,14 +36,16 @@ export async function requestServiceBookingApi(
       path.startsWith("/services") ||
       path === "/auth/logout")
 
+  const headers = new Headers(init.headers)
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json")
+  }
+  const requestInit = { ...init, headers }
+
   const response = requiresJwt
-    ? await authenticatedBackendFetch(path, init)
-    : await fetch(`${API_BASE_URL}${path}`, {
-        ...init,
-        headers: {
-          ...(init.body ? { "Content-Type": "application/json" } : {}),
-          ...init.headers,
-        },
+    ? await authenticatedBackendFetch(path, requestInit)
+    : await fetch(`${backendApiBaseUrl()}${path}`, {
+        ...requestInit,
         cache: "no-store",
       })
 

@@ -11,12 +11,6 @@ import {
   deleteAdminCustomer,
   deleteAdminTechnician,
   deleteAdminUser,
-  getAdminCustomer,
-  getAdminCustomerBookings,
-  getAdminTechnician,
-  getAdminTechnicianBookings,
-  getAdminTechnicianServices,
-  getAdminUser,
   getAdminUserActivity,
   setAdminUserBanned,
   updateAdminCustomer,
@@ -137,79 +131,26 @@ export function UsersTable({
     setNotice("")
     setLoadingDetails(true)
     try {
-      if (user.role === "customer") {
-        const [details, bookings, userActivity] = await Promise.all([
-          getAdminCustomer(user.id),
-          getAdminCustomerBookings(user.id),
-          getAdminUserActivity(user.id),
-        ])
-        setSelected(details)
-        setForm(userForm(details))
-        setActivity({
-          bookingCount: bookings.length,
-          completedBookingCount: bookings.filter(
-            (booking) => booking.status === "completed"
-          ).length,
-          services: [],
-          bookings: bookings.slice(0, 5).map((booking) => ({
-            id: booking.id,
-            serviceTitle: booking.serviceTitle,
-            status: booking.status,
-          })),
-        })
-        if (userActivity.user.id !== user.id) {
-          throw new Error(
-            "The customer activity response did not match the user."
-          )
-        }
-      } else if (user.role === "technician") {
-        const [details, bookings, services, userActivity] = await Promise.all([
-          getAdminTechnician(user.id),
-          getAdminTechnicianBookings(user.id),
-          getAdminTechnicianServices(user.id),
-          getAdminUserActivity(user.id),
-        ])
-        setSelected(details)
-        setForm(userForm(details))
-        setActivity({
-          bookingCount: bookings.length,
-          completedBookingCount: bookings.filter(
-            (booking) => booking.status === "completed"
-          ).length,
-          services: services.map((service) => ({
-            id: service.id,
-            title: service.title,
-            approval: service.approval,
-          })),
-          bookings: bookings.slice(0, 5).map((booking) => ({
-            id: booking.id,
-            serviceTitle: booking.serviceTitle,
-            status: booking.status,
-          })),
-        })
-        if (userActivity.user.id !== user.id) {
-          throw new Error(
-            "The technician activity response did not match the user."
-          )
-        }
-      } else {
-        const [details, userActivity] = await Promise.all([
-          getAdminUser(user.id),
-          getAdminUserActivity(user.id),
-        ])
-        setSelected(details)
-        setForm(userForm(details))
-        setActivity({
-          bookingCount: userActivity.bookingCount,
-          completedBookingCount: userActivity.completedBookingCount,
-          services: [],
-          bookings: userActivity.bookings.slice(0, 5).map((booking) => ({
-            id: booking.id,
-            serviceTitle: booking.serviceTitle,
-            status: booking.status,
-          })),
-        })
+      const userActivity = await getAdminUserActivity(user.id)
+      if (userActivity.user.id !== user.id) {
+        throw new Error("The activity response did not match the selected user.")
       }
+      setSelected(userActivity.user)
+      setForm(userForm(userActivity.user))
+      setActivity({
+        bookingCount: userActivity.bookingCount,
+        completedBookingCount: userActivity.completedBookingCount,
+        services: userActivity.services.map((service) => ({
+          id: service.id,
+          title: service.title,
+          approval: service.approval,
+        })),
+        bookings: userActivity.bookings.slice(0, 5).map((booking) => ({
+          id: booking.id,
+          serviceTitle: booking.serviceTitle,
+          status: booking.status,
+        })),
+      })
     } catch (detailError) {
       setError(
         detailError instanceof Error

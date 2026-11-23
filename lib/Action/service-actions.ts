@@ -163,6 +163,9 @@ export async function createTechnicianService(
     revalidatePath("/services")
     revalidatePath("/technician-dashboard")
     revalidatePath("/technician-dashboard/my-services")
+    revalidatePath("/admin-dashboard")
+    revalidatePath("/admin-dashboard/approvals")
+    revalidatePath("/admin-dashboard/users")
     return { ok: true }
   } catch (error) {
     console.error("Unable to create technician service.", error)
@@ -208,6 +211,9 @@ export async function updateTechnicianService(
     revalidatePath("/services")
     revalidatePath("/technician-dashboard")
     revalidatePath("/technician-dashboard/my-services")
+    revalidatePath("/admin-dashboard")
+    revalidatePath("/admin-dashboard/approvals")
+    revalidatePath("/admin-dashboard/users")
     return { ok: true }
   } catch (error) {
     console.error("Unable to update technician service.", error)
@@ -250,6 +256,9 @@ export async function updateTechnicianServiceAvailability(
     revalidatePath("/services")
     revalidatePath("/technician-dashboard")
     revalidatePath("/technician-dashboard/my-services")
+    revalidatePath("/admin-dashboard")
+    revalidatePath("/admin-dashboard/approvals")
+    revalidatePath("/admin-dashboard/users")
     return { ok: true }
   } catch (error) {
     console.error("Unable to update service availability.", error)
@@ -284,6 +293,9 @@ export async function deleteTechnicianService(
     revalidatePath("/services")
     revalidatePath("/technician-dashboard")
     revalidatePath("/technician-dashboard/my-services")
+    revalidatePath("/admin-dashboard")
+    revalidatePath("/admin-dashboard/approvals")
+    revalidatePath("/admin-dashboard/users")
     return { ok: true }
   } catch (error) {
     console.error("Unable to delete technician service.", error)

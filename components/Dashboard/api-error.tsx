@@ -1,3 +1,5 @@
+import { RetryButton } from "./retry-button"
+
 export function ApiError({
   message,
   title = "Unable to load live data",
@@ -12,6 +14,7 @@ export function ApiError({
     >
       <p className="font-semibold">{title}</p>
       <p className="mt-1">{message}</p>
+      <RetryButton />
     </div>
   )
 }

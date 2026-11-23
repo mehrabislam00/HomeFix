@@ -1,8 +1,10 @@
 import { revalidatePath, unstable_cache, updateTag } from "next/cache"
 import { headers } from "next/headers"
+import { cache } from "react"
 
 import { auth } from "@/lib/auth"
 import { profileCacheTag } from "@/lib/cache-tags"
+import { backendApiBaseUrl } from "@/lib/server-api-config"
 import { exchangeAccessTokenForRequest, getAccessToken } from "@/lib/server-jwt"
 import {
   deleteProfileAvatar,
@@ -15,10 +17,6 @@ import type {
   ProfileResult,
   ProfileValues,
 } from "@/lib/profile-types"
-
-const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
-).replace(/\/+$/, "")
 
 export type ProfileRole = "customer" | "technician"
 
@@ -45,6 +43,13 @@ type ApiUser = {
 
 class ProfileVerificationError extends Error {}
 class ProfileAccessTokenExpiredError extends Error {}
+
+const getAuthSession = cache(async () =>
+  auth.api.getSession({
+    headers: await headers(),
+    query: { disableCookieCache: true },
+  })
+)
 
 function isRecord(value: unknown): value is ApiUser {
   return typeof value === "object" && value !== null
@@ -77,10 +82,7 @@ function asDate(value: unknown): string {
 export async function getProfileSession(role: ProfileRole) {
   let session: Awaited<ReturnType<typeof auth.api.getSession>>
   try {
-    session = await auth.api.getSession({
-      headers: await headers(),
-      query: { disableCookieCache: true },
-    })
+    session = await getAuthSession()
   } catch (error) {
     console.error("Unable to verify the profile session.", error)
     return {
@@ -315,11 +317,11 @@ export async function saveProfile(
 
 export function profileEndpoint(role: ProfileRole, id: string): string {
   const resource = role === "customer" ? "customers" : "technicians"
-  return `${API_BASE_URL}/${resource}/${encodeURIComponent(id)}`
+  return `${backendApiBaseUrl()}/${resource}/${encodeURIComponent(id)}`
 }
 
 export function userEndpoint(id: string): string {
-  return `${API_BASE_URL}/users/${encodeURIComponent(id)}`
+  return `${backendApiBaseUrl()}/users/${encodeURIComponent(id)}`
 }
 
 export async function readProfileResponse(

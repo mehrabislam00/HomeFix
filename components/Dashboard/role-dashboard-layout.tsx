@@ -5,6 +5,7 @@ import type { DashboardVariant } from "@/lib/dashboard-config"
 import { getAdminProfile } from "@/lib/Action/admin-actions"
 import { getCustomerProfile } from "@/lib/Action/customer-actions"
 import { getTechnicianProfile } from "@/lib/Action/technician-actions"
+import { ApiError } from "./api-error"
 
 const loaders = {
   customer: getCustomerProfile,
@@ -49,12 +50,7 @@ export async function RoleDashboardLayout({
       {result.ok ? (
         children
       ) : (
-        <p
-          role="alert"
-          className="rounded-2xl border border-status-rejected-fg/20 bg-status-rejected-bg p-5 text-sm font-medium text-status-rejected-fg"
-        >
-          {result.error}
-        </p>
+        <ApiError title="Unable to verify your session" message={result.error} />
       )}
     </DashboardShell>
   )

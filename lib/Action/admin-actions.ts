@@ -2,6 +2,7 @@
 
 import { revalidatePath, updateTag } from "next/cache"
 import { headers } from "next/headers"
+import { cache } from "react"
 
 import { auth } from "@/lib/auth"
 import { authenticatedBackendFetch } from "@/lib/server-jwt"
@@ -31,6 +32,19 @@ import type {
 } from "@/lib/profile-types"
 
 const ADMIN_PATH = "/admin-dashboard"
+const CUSTOMER_DATA_PATHS = [
+  "/customer-dashboard",
+  "/customer-dashboard/bookings",
+  "/customer-dashboard/payments",
+  "/customer-dashboard/profile",
+]
+const TECHNICIAN_DATA_PATHS = [
+  "/technician-dashboard",
+  "/technician-dashboard/my-services",
+  "/technician-dashboard/requests",
+  "/technician-dashboard/payments",
+  "/technician-dashboard/profile",
+]
 
 type ApiRecord = Record<string, unknown>
 type AdminMutationResult = { ok: true } | { ok: false; error: string }
@@ -294,7 +308,8 @@ async function mutateAdmin(
   method: "PATCH" | "DELETE",
   body?: Record<string, unknown>,
   revalidate: string[] = [],
-  cacheTags: string[] = []
+  cacheTags: string[] = [],
+  additionalPaths: string[] = []
 ): Promise<AdminMutationResult> {
   try {
     const adminId = await getAdminId()
@@ -303,6 +318,9 @@ async function mutateAdmin(
       ...(body ? { body: JSON.stringify(body) } : {}),
     })
     revalidateAdminData(...revalidate)
+    for (const additionalPath of additionalPaths) {
+      revalidatePath(additionalPath)
+    }
     for (const tag of cacheTags) updateTag(tag)
     return { ok: true }
   } catch (error) {
@@ -315,7 +333,7 @@ async function mutateAdmin(
 }
 
 /** Every admin action re-checks the session: server actions are public endpoints. */
-async function getAdminSession() {
+const getAdminSession = cache(async () => {
   let session: Awaited<ReturnType<typeof auth.api.getSession>>
   try {
     session = await auth.api.getSession({
@@ -356,7 +374,7 @@ async function getAdminSession() {
   }
 
   return { ok: true as const, session }
-}
+})
 
 export async function getAdminProfile(): Promise<ProfileLoadResult> {
   const access = await getAdminSession()
@@ -532,7 +550,8 @@ export async function updateAdminCustomer(
     "PATCH",
     values,
     ["users"],
-    [profileCacheTag("customer", customerId)]
+    [profileCacheTag("customer", customerId)],
+    ["/customer-dashboard", "/customer-dashboard/profile"]
   )
 }
 
@@ -545,7 +564,8 @@ export async function deleteAdminCustomer(
     "DELETE",
     undefined,
     ["users"],
-    [profileCacheTag("customer", customerId)]
+    [profileCacheTag("customer", customerId)],
+    CUSTOMER_DATA_PATHS
   )
 }
 
@@ -599,7 +619,8 @@ export async function updateAdminTechnician(
     "PATCH",
     values,
     ["users"],
-    [profileCacheTag("technician", technicianId)]
+    [profileCacheTag("technician", technicianId)],
+    ["/technician-dashboard", "/technician-dashboard/profile"]
   )
 }
 
@@ -615,7 +636,8 @@ export async function deleteAdminTechnician(
     [
       profileCacheTag("technician", technicianId),
       ...publicServiceCatalogMutationTags(),
-    ]
+    ],
+    TECHNICIAN_DATA_PATHS
   )
 }
 
@@ -636,7 +658,8 @@ export async function updateAdminUser(
     "PATCH",
     values,
     ["users"],
-    [profileCacheTag("customer", userId), profileCacheTag("technician", userId)]
+    [profileCacheTag("customer", userId), profileCacheTag("technician", userId)],
+    [...CUSTOMER_DATA_PATHS, ...TECHNICIAN_DATA_PATHS]
   )
 }
 
@@ -652,7 +675,9 @@ export async function setAdminUserBanned(
     `/users/${encodeURIComponent(userId)}/ban`,
     "PATCH",
     { banned },
-    ["users"]
+    ["users"],
+    [],
+    [...CUSTOMER_DATA_PATHS, ...TECHNICIAN_DATA_PATHS]
   )
 }
 
@@ -669,7 +694,8 @@ export async function deleteAdminUser(
       profileCacheTag("customer", userId),
       profileCacheTag("technician", userId),
       ...publicServiceCatalogMutationTags(),
-    ]
+    ],
+    [...CUSTOMER_DATA_PATHS, ...TECHNICIAN_DATA_PATHS]
   )
 }
 
@@ -792,7 +818,12 @@ export async function updateAdminService(
     "PATCH",
     values,
     ["approvals"],
-    publicServiceMutationTags(serviceId)
+    publicServiceMutationTags(serviceId),
+    [
+      ...TECHNICIAN_DATA_PATHS.slice(0, 2),
+      "/services",
+      `/services/${encodeURIComponent(serviceId)}`,
+    ]
   )
 }
 
@@ -809,7 +840,12 @@ export async function decideAdminService(
     "PATCH",
     { approvalStatus: decision },
     ["approvals"],
-    publicServiceMutationTags(serviceId)
+    publicServiceMutationTags(serviceId),
+    [
+      ...TECHNICIAN_DATA_PATHS.slice(0, 2),
+      "/services",
+      `/services/${encodeURIComponent(serviceId)}`,
+    ]
   )
 }
 
@@ -822,7 +858,12 @@ export async function deleteAdminService(
     "DELETE",
     undefined,
     ["approvals"],
-    publicServiceMutationTags(serviceId)
+    publicServiceMutationTags(serviceId),
+    [
+      ...TECHNICIAN_DATA_PATHS.slice(0, 2),
+      "/services",
+      `/services/${encodeURIComponent(serviceId)}`,
+    ]
   )
 }
 
@@ -859,7 +900,14 @@ export async function updateAdminBooking(
     `/bookings/${encodeURIComponent(bookingId)}`,
     "PATCH",
     values,
-    ["all-bookings"]
+    ["all-bookings"],
+    [],
+    [
+      ...CUSTOMER_DATA_PATHS.slice(0, 3),
+      ...TECHNICIAN_DATA_PATHS.slice(0, 4),
+      `/customer-dashboard/bookings/${encodeURIComponent(bookingId)}`,
+      `/technician-dashboard/requests/${encodeURIComponent(bookingId)}`,
+    ]
   )
 }
 

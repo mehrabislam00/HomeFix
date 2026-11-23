@@ -41,14 +41,10 @@ export async function GET(request: NextRequest) {
     return response
   } catch (error) {
     console.error("Unable to complete authentication redirect.", error)
-    const loginUrl = new URL(
-      requiredRoleForPath(returnTo ?? "") === "admin"
-        ? "/admin/login"
-        : "/login",
-      request.url
+    const response = NextResponse.json(
+      { error: "Unable to verify your session. Please try again shortly." },
+      { status: 503, headers: { "Retry-After": "3" } }
     )
-    if (returnTo) loginUrl.searchParams.set("next", returnTo)
-    const response = NextResponse.redirect(loginUrl)
     response.cookies.delete("homefix-registration-role")
     return response
   }

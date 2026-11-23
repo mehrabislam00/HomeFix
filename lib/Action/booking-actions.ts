@@ -71,9 +71,14 @@ export async function cancelCustomerBooking(
     })
     revalidatePath("/customer-dashboard")
     revalidatePath("/customer-dashboard/bookings")
+    revalidatePath("/customer-dashboard/payments")
     revalidatePath(
       `/customer-dashboard/bookings/${encodeURIComponent(bookingId)}`
     )
+    revalidatePath("/technician-dashboard")
+    revalidatePath("/technician-dashboard/requests")
+    revalidatePath("/admin-dashboard")
+    revalidatePath("/admin-dashboard/all-bookings")
     return { ok: true }
   } catch (error) {
     console.error("Unable to cancel customer booking.", error)
@@ -123,6 +128,10 @@ export async function createCustomerBooking(
     })
     revalidatePath("/customer-dashboard")
     revalidatePath("/customer-dashboard/bookings")
+    revalidatePath("/technician-dashboard")
+    revalidatePath("/technician-dashboard/requests")
+    revalidatePath("/admin-dashboard")
+    revalidatePath("/admin-dashboard/all-bookings")
     return { ok: true }
   } catch (error) {
     console.error("Unable to create customer booking.", error)
@@ -201,6 +210,9 @@ export async function updateTechnicianBooking(
     revalidatePath("/technician-dashboard/requests")
     revalidatePath("/customer-dashboard")
     revalidatePath("/customer-dashboard/bookings")
+    revalidatePath("/customer-dashboard/payments")
+    revalidatePath("/admin-dashboard")
+    revalidatePath("/admin-dashboard/all-bookings")
     return { ok: true }
   } catch (error) {
     console.error("Unable to update technician booking.", error)

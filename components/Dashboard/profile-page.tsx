@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 
 import { PageHeader } from "@/components/Dashboard/page-header"
+import { ApiError } from "@/components/Dashboard/api-error"
 import { ProfileCard } from "@/components/Dashboard/profile-card"
 import { ProfileForm } from "@/components/Dashboard/profile-form"
 import {
@@ -40,12 +41,7 @@ export async function ProfilePage({
     return (
       <div className="flex flex-col gap-6">
         {header}
-        <p
-          role="alert"
-          className="rounded-2xl border border-status-rejected-fg/20 bg-status-rejected-bg p-5 text-sm font-medium text-status-rejected-fg"
-        >
-          {result.error}
-        </p>
+        <ApiError title="Unable to load your profile" message={result.error} />
       </div>
     )
   }

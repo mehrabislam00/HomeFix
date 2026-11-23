@@ -2,18 +2,28 @@ import { betterAuth } from "better-auth";
 import { getOAuthState } from "better-auth/api";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
+import { assertProductionHttpsUrl } from "@/lib/server-api-config";
 
 const uri = process.env.MONGODB_URI;
 const username = process.env.MONGODB_USERNAME;
 const password = process.env.MONGODB_PASSWORD;
+const betterAuthUrl = process.env.BETTER_AUTH_URL;
+
+assertProductionHttpsUrl("BETTER_AUTH_URL", betterAuthUrl);
 
 if (!uri || !username || !password) {
   throw new Error("MONGODB_URI, MONGODB_USERNAME, and MONGODB_PASSWORD must be configured.");
 }
 
-const client = new MongoClient(uri, {
-  auth: { username, password },
-});
+const globalForMongo = globalThis as typeof globalThis & {
+  homeFixMongoClient?: MongoClient;
+};
+const client =
+  globalForMongo.homeFixMongoClient ??
+  new MongoClient(uri, {
+    auth: { username, password },
+  });
+globalForMongo.homeFixMongoClient = client;
 export const db = client.db("HomeFix_DB");
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -28,7 +38,7 @@ if (Boolean(googleClientId) !== Boolean(googleClientSecret)) {
 }
 
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL,
+  baseURL: betterAuthUrl,
   socialProviders:
     googleClientId && googleClientSecret
       ? {

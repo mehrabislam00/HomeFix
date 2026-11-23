@@ -16,7 +16,26 @@ import { redirect } from "next/navigation"
 export const metadata: Metadata = { title: "Dashboard — HomeFix" }
 
 const Dashboard = async () => {
-  const profile = await getCustomerProfile()
+  const [profileResult, bookingsResult] = await Promise.allSettled([
+    getCustomerProfile(),
+    getCustomerBookings(),
+  ])
+  if (profileResult.status === "rejected") {
+    console.error(
+      "Unable to load the customer dashboard profile.",
+      profileResult.reason
+    )
+    return (
+      <ApiError
+        message={
+          profileResult.reason instanceof Error
+            ? profileResult.reason.message
+            : "Please try again in a moment."
+        }
+      />
+    )
+  }
+  const profile = profileResult.value
   if (!profile.ok && profile.unauthorized) {
     redirect(profile.redirectTo ?? "/login")
   }
@@ -30,21 +49,22 @@ const Dashboard = async () => {
       </p>
     )
   }
-  let bookings: Booking[]
-  try {
-    bookings = await getCustomerBookings()
-  } catch (error) {
-    console.error("Unable to load customer dashboard bookings.", error)
+  if (bookingsResult.status === "rejected") {
+    console.error(
+      "Unable to load customer dashboard bookings.",
+      bookingsResult.reason
+    )
     return (
       <ApiError
         message={
-          error instanceof Error
-            ? error.message
+          bookingsResult.reason instanceof Error
+            ? bookingsResult.reason.message
             : "Please try again in a moment."
         }
       />
     )
   }
+  const bookings: Booking[] = bookingsResult.value
   const customer = profile.customer
 
   const active = bookings.filter((b) =>
