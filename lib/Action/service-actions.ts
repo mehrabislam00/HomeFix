@@ -119,11 +119,10 @@ export async function createTechnicianService(
           technicianId,
           title: values.title.trim(),
           category: values.category,
-          price: values.price,
+          basePrice: values.price,
           description: values.description.trim(),
           availability: values.availability.trim(),
-          available: values.acceptingBookings,
-          acceptingBookings: values.acceptingBookings,
+          isAvailable: values.acceptingBookings,
           ...(image ? { image } : {}),
         }),
       }
@@ -165,11 +164,10 @@ export async function updateTechnicianService(
           technicianId,
           title: values.title.trim(),
           category: values.category,
-          price: values.price,
+          basePrice: values.price,
           description: values.description.trim(),
           availability: values.availability.trim(),
-          available: values.acceptingBookings,
-          acceptingBookings: values.acceptingBookings,
+          isAvailable: values.acceptingBookings,
         }),
       }
     )
@@ -210,8 +208,7 @@ export async function updateTechnicianServiceAvailability(
         method: "PATCH",
         body: JSON.stringify({
           technicianId,
-          available: acceptingBookings,
-          acceptingBookings,
+          isAvailable: acceptingBookings,
         }),
       }
     )

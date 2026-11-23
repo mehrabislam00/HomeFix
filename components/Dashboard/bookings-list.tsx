@@ -25,11 +25,8 @@ const filters: {
   { key: "all", label: "All", match: () => true },
   { key: "active", label: "Active", match: (s) => ACTIVE_STATUSES.includes(s) },
   { key: "completed", label: "Completed", match: (s) => s === "completed" },
-  {
-    key: "closed",
-    label: "Rejected / Cancelled",
-    match: (s) => s === "rejected" || s === "cancelled",
-  },
+  { key: "rejected", label: "Rejected", match: (s) => s === "rejected" },
+  { key: "cancelled", label: "Cancelled", match: (s) => s === "cancelled" },
 ]
 
 export function BookingsList({ bookings }: { bookings: Booking[] }) {

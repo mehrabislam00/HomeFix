@@ -28,17 +28,29 @@ export function RecentSubmissions({ services }: { services: AdminService[] }) {
               className="flex items-center gap-3 rounded-3xl border border-transparent p-2 transition-colors duration-200 hover:border-white/80 hover:bg-white/60"
             >
               <div className="relative size-12 shrink-0 overflow-hidden rounded-2xl ring-1 ring-forest/10">
-                <Image src={service.image} alt="" fill sizes="48px" className="object-cover" />
+                <Image
+                  src={service.image}
+                  alt=""
+                  fill
+                  sizes="48px"
+                  unoptimized={typeof service.image === "string"}
+                  className="object-cover"
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-[family-name:var(--font-manrope)] text-sm font-bold text-forest">
                   {service.title}
                 </p>
                 <p className="mt-0.5 truncate text-xs text-ink-soft">
-                  {format(parseISO(service.submittedAt), "MMM d, yyyy")}
+                  {service.submittedAt
+                    ? format(parseISO(service.submittedAt), "MMM d, yyyy")
+                    : "Date unavailable"}
                 </p>
               </div>
-              <ServiceApprovalBadge status={service.approval} className="shrink-0" />
+              <ServiceApprovalBadge
+                status={service.approval}
+                className="shrink-0"
+              />
             </li>
           ))}
         </ul>

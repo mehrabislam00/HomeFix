@@ -15,8 +15,12 @@ export type Booking = {
   id: string
   serviceId: string
   serviceTitle: string
+  serviceCategory?: string
+  serviceDescription?: string
   image: StaticImageData | string
   technician: string
+  technicianEmail?: string
+  technicianPhone?: string
   /** ISO date, yyyy-MM-dd */
   date: string
   /** Estimated visit price, in BDT */
@@ -25,6 +29,8 @@ export type Booking = {
   address?: string
   phone?: string
   notes?: string
+  jobStartedAt?: string
+  jobCompletedAt?: string
   status: BookingStatus
   paymentStatus: PaymentStatus
 }

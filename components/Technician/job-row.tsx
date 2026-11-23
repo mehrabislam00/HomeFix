@@ -25,7 +25,7 @@ const actionsFor: Record<
     { action: "reject", label: "Reject" },
   ],
   accepted: [{ action: "start", label: "Start job", primary: true }],
-  in_progress: [{ action: "complete", label: "Mark complete", primary: true }],
+  in_progress: [{ action: "complete", label: "Close job", primary: true }],
   completed: [],
   rejected: [],
   cancelled: [],

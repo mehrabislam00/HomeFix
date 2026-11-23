@@ -82,6 +82,15 @@ function asDate(...values: unknown[]): string {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10)
 }
 
+function asTimestamp(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value !== "string" && !(value instanceof Date)) continue
+    const date = new Date(value)
+    if (!Number.isNaN(date.getTime())) return date.toISOString()
+  }
+  return undefined
+}
+
 function requiredText(label: string, ...values: unknown[]): string {
   const value = stringValue(...values)?.trim()
   if (!value) throw new Error(`The API returned a service without ${label}.`)
@@ -142,10 +151,19 @@ export function normalizeService(value: unknown): ServiceListing {
     ) ?? "Technician"
   const category = requiredText("a category", source.category)
   const image =
-    stringValue(source.image, source.imageUrl, source.photoUrl) ??
-    serviceImageForCategory(category)
-  const id = idOf(source, "_id", "id", "serviceId")
-  const price = numberValue(source.price, source.startingPrice, source.amount)
+    stringValue(
+      source.image,
+      source.imageUrl,
+      source.photoUrl,
+      source.serviceImage
+    ) ?? serviceImageForCategory(category)
+  const id = idOf(source, "serviceId", "_id", "id")
+  const price = numberValue(
+    source.price,
+    source.basePrice,
+    source.startingPrice,
+    source.amount
+  )
   if (price === undefined || price <= 0) {
     throw new Error(`The API returned an invalid price for service ${id}.`)
   }
@@ -165,7 +183,8 @@ export function normalizeService(value: unknown): ServiceListing {
       "a title",
       source.title,
       source.name,
-      source.serviceName
+      source.serviceName,
+      source.serviceTitle
     ),
     description:
       stringValue(source.description, source.details, source.about) ?? "",
@@ -267,6 +286,7 @@ function bookingEstimate(
     source.estimatedAmount,
     source.estimate,
     source.amount,
+    source.basePrice,
     service?.price,
     serviceInfo?.price
   )
@@ -287,10 +307,10 @@ export function normalizeCustomerBooking(
   const serviceId =
     identifier(source.serviceId) ?? identifier(service) ?? serviceInfo?.id ?? ""
   const date = asDate(
+    source.preferredDate,
     source.date,
     source.bookingDate,
-    source.scheduledDate,
-    source.createdAt
+    source.scheduledDate
   )
   return {
     id: idOf(source, "_id", "id", "bookingId"),
@@ -303,17 +323,36 @@ export function normalizeCustomerBooking(
       service?.name,
       serviceInfo?.title
     ),
-    image: serviceInfo?.image ?? serviceImageForCategory(""),
+    serviceCategory:
+      stringValue(source.category, service?.category, serviceInfo?.category) ??
+      "",
+    serviceDescription: stringValue(
+      source.serviceDescription,
+      service?.description,
+      serviceInfo?.description
+    ),
+    image:
+      serviceInfo?.image ??
+      stringValue(source.serviceImage) ??
+      serviceImageForCategory(""),
     technician:
       stringValue(source.technicianName, technician?.name) ??
       serviceInfo?.technician ??
       "Technician",
+    technicianEmail: stringValue(source.technicianEmail, technician?.email),
+    technicianPhone: stringValue(source.technicianPhone, technician?.phone),
     date,
     estimate: bookingEstimate(source, service, serviceInfo),
     finalAmount: numberValue(source.finalAmount),
     address: stringValue(source.address, source.serviceAddress),
-    phone: stringValue(source.phone, source.customerPhone),
-    notes: stringValue(source.notes, source.description),
+    phone: stringValue(source.customerPhone, source.phone),
+    notes: stringValue(
+      source.problemDescription,
+      source.notes,
+      source.description
+    ),
+    jobStartedAt: asTimestamp(source.jobStartedAt),
+    jobCompletedAt: asTimestamp(source.jobCompletedAt),
     status: statusOf(source.status ?? source.bookingStatus),
     paymentStatus: paymentStatusOf(source.paymentStatus),
   }
@@ -328,10 +367,10 @@ export function normalizeTechnicianBooking(
   const serviceId =
     identifier(source.serviceId) ?? identifier(service) ?? serviceInfo?.id ?? ""
   const date = asDate(
+    source.preferredDate,
     source.date,
     source.bookingDate,
-    source.scheduledDate,
-    source.createdAt
+    source.scheduledDate
   )
   return {
     id: idOf(source, "_id", "id", "bookingId"),
@@ -344,23 +383,41 @@ export function normalizeTechnicianBooking(
       service?.name,
       serviceInfo?.title
     ),
-    image: serviceInfo?.image ?? serviceImageForCategory(""),
+    serviceCategory:
+      stringValue(source.category, service?.category, serviceInfo?.category) ??
+      "",
+    serviceDescription: stringValue(
+      source.serviceDescription,
+      service?.description,
+      serviceInfo?.description
+    ),
+    image:
+      serviceInfo?.image ??
+      stringValue(source.serviceImage) ??
+      serviceImageForCategory(""),
     customerName:
       stringValue(source.customerName, customer?.name, customer?.fullName) ??
       "Customer",
+    customerEmail: stringValue(source.customerEmail, customer?.email),
+    customerImage: stringValue(source.customerImage, customer?.image),
+    customerArea: stringValue(source.customerArea, customer?.area),
     customerPhone:
       stringValue(source.customerPhone, customer?.phone, source.phone) ?? "",
-    area: stringValue(source.area, source.customerArea, customer?.area) ?? "",
-    address:
-      stringValue(source.address, source.serviceAddress, customer?.address) ??
-      "",
+    area: stringValue(source.customerArea, source.area, customer?.area) ?? "",
+    address: stringValue(source.address, source.serviceAddress) ?? "",
     date,
     timeSlot: stringValue(source.timeSlot, source.slot) ?? "",
     estimate: bookingEstimate(source, service, serviceInfo),
     finalAmount: numberValue(source.finalAmount),
+    jobStartedAt: asTimestamp(source.jobStartedAt),
+    jobCompletedAt: asTimestamp(source.jobCompletedAt),
     status: statusOf(source.status ?? source.bookingStatus),
     paymentStatus: paymentStatusOf(source.paymentStatus),
-    notes: stringValue(source.notes, source.description),
+    notes: stringValue(
+      source.problemDescription,
+      source.notes,
+      source.description
+    ),
   }
 }
 

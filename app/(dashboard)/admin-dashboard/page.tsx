@@ -1,49 +1,70 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { format } from "date-fns"
-import { CalendarCheck, ClipboardCheck, Users, Wallet, Wrench } from "lucide-react"
+import {
+  CalendarCheck,
+  ClipboardCheck,
+  Users,
+  Wallet,
+  Wrench,
+} from "lucide-react"
 
 import { RecentAdminBookings } from "@/components/Admin/recent-admin-bookings"
 import { RecentSubmissions } from "@/components/Admin/recent-submissions"
 import { RecentUsers } from "@/components/Admin/recent-users"
 import { StatusChart } from "@/components/Admin/status-chart"
-import { SampleDataNotice } from "@/components/Dashboard/sample-data-notice"
+import { ApiError } from "@/components/Dashboard/api-error"
 import { StatCard } from "@/components/Dashboard/stat-card"
 import { WelcomeBanner } from "@/components/Dashboard/welcome-banner"
 import { Button } from "@/components/ui/button"
+import { countByStatus } from "@/lib/admin-data"
 import {
-  countByStatus,
   getAdminBookings,
+  getAdminDashboardStats,
+  getAdminProfile,
+  getAdminReports,
   getAdminServices,
-  getAdminTransactions,
-  summarizeTransactions,
-} from "@/lib/admin-data"
-import { getAdminProfile, getAdminUsers } from "@/lib/Action/admin-actions"
+  getAdminUsers,
+} from "@/lib/Action/admin-actions"
 import { btn } from "@/lib/button-styles"
 import { firstName } from "@/lib/dashboard-data"
-import { cn, formatBDT } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Overview — HomeFix Admin" }
 
 const Overview = async () => {
-  const [profile, { users }, services, bookings, transactions] =
-    await Promise.all([
-      getAdminProfile(),
-      getAdminUsers(),
-      getAdminServices(),
-      getAdminBookings(),
-      getAdminTransactions(),
-    ])
+  let profile: Awaited<ReturnType<typeof getAdminProfile>>
+  let usersResult: Awaited<ReturnType<typeof getAdminUsers>>
+  let services: Awaited<ReturnType<typeof getAdminServices>>
+  let bookings: Awaited<ReturnType<typeof getAdminBookings>>
+  let stats: Awaited<ReturnType<typeof getAdminDashboardStats>>
+  let reports: Awaited<ReturnType<typeof getAdminReports>>
+  try {
+    ;[profile, usersResult, services, bookings, stats, reports] =
+      await Promise.all([
+        getAdminProfile(),
+        getAdminUsers(),
+        getAdminServices(),
+        getAdminBookings(),
+        getAdminDashboardStats(),
+        getAdminReports(),
+      ])
+  } catch (error) {
+    return (
+      <div className="flex flex-col gap-6">
+        <ApiError
+          message={
+            error instanceof Error
+              ? error.message
+              : "Unable to load admin dashboard data."
+          }
+        />
+      </div>
+    )
+  }
+  const { users } = usersResult
   const name = profile.ok ? firstName(profile.customer.name) : "there"
-
-  const customers = users.filter((u) => u.role === "customer").length
-  const technicians = users.filter((u) => u.role === "technician").length
-  const pending = services.filter((s) => s.approval === "pending").length
-  const completed = bookings.filter((b) => b.status === "completed").length
-  const { revenue, count: paidCount } = summarizeTransactions(
-    transactions,
-    bookings
-  )
+  const pending = stats.services.pending
 
   return (
     <div className="flex flex-col gap-6">
@@ -71,22 +92,24 @@ const Overview = async () => {
         }
       />
 
-      <SampleDataNotice>
-        Users are live. Services, bookings and transactions below are sample
-        data until those APIs are connected.
-      </SampleDataNotice>
+      {!usersResult.live && (
+        <ApiError
+          title="Unable to load users"
+          message={usersResult.error ?? "The user list could not be loaded."}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total users"
-          value={users.length}
-          hint={`${customers} customers · ${technicians} technicians`}
+          value={stats.users.total}
+          hint={`${stats.users.customers} customers · ${stats.users.technicians} technicians`}
           icon={Users}
           delay={0.05}
         />
         <StatCard
           label="Total services"
-          value={services.length}
+          value={stats.services.total}
           hint={`${pending} pending approval`}
           icon={Wrench}
           tone="amber"
@@ -94,16 +117,18 @@ const Overview = async () => {
         />
         <StatCard
           label="Total bookings"
-          value={bookings.length}
-          hint={`${completed} completed`}
+          value={stats.bookings.total}
+          hint={`${stats.bookings.completed} completed`}
           icon={CalendarCheck}
           tone="blue"
           delay={0.15}
         />
         <StatCard
           label="Revenue"
-          value={formatBDT(revenue)}
-          hint={`${paidCount} ${paidCount === 1 ? "transaction" : "transactions"}`}
+          value={stats.payments.available ? "—" : "Unavailable"}
+          hint={
+            stats.payments.message ?? "Payment reporting is not available yet."
+          }
           icon={Wallet}
           tone="green"
           delay={0.2}
@@ -111,10 +136,44 @@ const Overview = async () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <StatusChart data={countByStatus(bookings)} />
+        <StatusChart data={countByStatus(reports.bookingStatuses)} />
         <RecentSubmissions services={services} />
         <RecentUsers users={users} />
         <RecentAdminBookings bookings={bookings} />
+        <section className="glass-card rounded-[1.75rem] p-5 sm:p-7">
+          <h2 className="font-[family-name:var(--font-manrope)] text-xl font-extrabold tracking-tight text-forest">
+            Most booked services
+          </h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Service demand based on completed booking records.
+          </p>
+          {reports.mostBookedServices.length ? (
+            <ol className="mt-5 flex flex-col gap-3">
+              {reports.mostBookedServices.slice(0, 5).map((service) => (
+                <li
+                  key={service._id}
+                  className="flex items-center justify-between gap-4 border-b border-forest/10 pb-3 last:border-0"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-forest">
+                      {service.serviceTitle}
+                    </span>
+                    <span className="text-xs text-ink-soft">
+                      {service.category}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-sm font-bold text-forest">
+                    {service.bookingCount} bookings
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-5 text-sm text-ink-soft">
+              No booking reports are available yet.
+            </p>
+          )}
+        </section>
       </div>
     </div>
   )

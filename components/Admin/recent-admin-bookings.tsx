@@ -6,7 +6,11 @@ import { BookingStatusBadge } from "@/components/Dashboard/status-badge"
 import type { AdminBooking } from "@/lib/admin-data"
 import { OverviewPanel } from "./overview-panel"
 
-export function RecentAdminBookings({ bookings }: { bookings: AdminBooking[] }) {
+export function RecentAdminBookings({
+  bookings,
+}: {
+  bookings: AdminBooking[]
+}) {
   const recent = [...bookings]
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 5)
@@ -31,10 +35,16 @@ export function RecentAdminBookings({ bookings }: { bookings: AdminBooking[] }) 
                   {booking.serviceTitle}
                 </p>
                 <p className="mt-0.5 truncate text-xs text-ink-soft">
-                  {booking.customer} · {format(parseISO(booking.date), "MMM d, yyyy")}
+                  {booking.customer} ·{" "}
+                  {booking.date
+                    ? format(parseISO(booking.date), "MMM d, yyyy")
+                    : "Date not set"}
                 </p>
               </div>
-              <BookingStatusBadge status={booking.status} className="shrink-0" />
+              <BookingStatusBadge
+                status={booking.status}
+                className="shrink-0"
+              />
             </li>
           ))}
         </ul>

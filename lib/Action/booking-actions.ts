@@ -3,12 +3,10 @@
 import { revalidatePath } from "next/cache"
 
 import { getProfileSession } from "@/lib/Action/profile-action-utils"
-import { getTechnicianServiceListings } from "@/lib/Action/service-actions"
 import {
   normalizeCustomerBooking,
   normalizeService,
   normalizeTechnicianBooking,
-  serviceLookup,
   unwrapCollection,
 } from "@/lib/service-booking-data"
 import { requestServiceBookingApi } from "@/lib/service-booking-api"
@@ -41,26 +39,20 @@ export async function getCustomerServices(): Promise<ServiceListing[]> {
 
 export async function getCustomerBookings(): Promise<Booking[]> {
   const id = await userIdForRole("customer")
-  const [result, services] = await Promise.all([
-    requestServiceBookingApi(`/customers/${encodeURIComponent(id)}/bookings`),
-    getCustomerServices(),
-  ])
+  const result = await requestServiceBookingApi(
+    `/customers/${encodeURIComponent(id)}/bookings`
+  )
   return collection(result, "bookings")
-    .map((booking) =>
-      normalizeCustomerBooking(booking, serviceLookup(services))
-    )
+    .map((booking) => normalizeCustomerBooking(booking, new Map()))
     .sort((a, b) => b.date.localeCompare(a.date))
 }
 
 export async function getCustomerBooking(bookingId: string): Promise<Booking> {
   const id = await userIdForRole("customer")
-  const [booking, services] = await Promise.all([
-    requestServiceBookingApi(
-      `/customers/${encodeURIComponent(id)}/bookings/${encodeURIComponent(bookingId)}`
-    ),
-    getCustomerServices(),
-  ])
-  return normalizeCustomerBooking(booking, serviceLookup(services))
+  const booking = await requestServiceBookingApi(
+    `/customers/${encodeURIComponent(id)}/bookings/${encodeURIComponent(bookingId)}`
+  )
+  return normalizeCustomerBooking(booking, new Map())
 }
 
 export async function createCustomerBooking(
@@ -91,10 +83,10 @@ export async function createCustomerBooking(
       body: JSON.stringify({
         customerId,
         serviceId: values.serviceId,
-        date: values.date,
+        preferredDate: values.date,
         address: values.address.trim(),
-        phone: values.phone.trim(),
-        notes: values.notes.trim(),
+        customerPhone: values.phone.trim(),
+        problemDescription: values.notes.trim(),
       }),
     })
     revalidatePath("/customer-dashboard")
@@ -114,14 +106,11 @@ export async function createCustomerBooking(
 
 export async function getTechnicianBookings(): Promise<JobRequest[]> {
   const id = await userIdForRole("technician")
-  const [result, services] = await Promise.all([
-    requestServiceBookingApi(`/technicians/${encodeURIComponent(id)}/bookings`),
-    getTechnicianServiceListings(),
-  ])
+  const result = await requestServiceBookingApi(
+    `/technicians/${encodeURIComponent(id)}/bookings`
+  )
   return collection(result, "bookings")
-    .map((booking) =>
-      normalizeTechnicianBooking(booking, serviceLookup(services))
-    )
+    .map((booking) => normalizeTechnicianBooking(booking, new Map()))
     .sort((a, b) => b.date.localeCompare(a.date))
 }
 
@@ -129,19 +118,16 @@ export async function getTechnicianBooking(
   bookingId: string
 ): Promise<JobRequest> {
   const id = await userIdForRole("technician")
-  const [booking, services] = await Promise.all([
-    requestServiceBookingApi(
-      `/technicians/${encodeURIComponent(id)}/bookings/${encodeURIComponent(bookingId)}`
-    ),
-    getTechnicianServiceListings(),
-  ])
-  return normalizeTechnicianBooking(booking, serviceLookup(services))
+  const booking = await requestServiceBookingApi(
+    `/technicians/${encodeURIComponent(id)}/bookings/${encodeURIComponent(bookingId)}`
+  )
+  return normalizeTechnicianBooking(booking, new Map())
 }
 
 const nextStatus: Record<JobAction, string> = {
   accept: "accepted",
   reject: "rejected",
-  start: "in_progress",
+  start: "in-progress",
   complete: "completed",
 }
 

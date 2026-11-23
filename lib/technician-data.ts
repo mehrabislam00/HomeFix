@@ -26,8 +26,13 @@ export type JobRequest = {
   id: string
   serviceId: string
   serviceTitle: string
+  serviceCategory?: string
+  serviceDescription?: string
   image: StaticImageData | string
   customerName: string
+  customerEmail?: string
+  customerImage?: string
+  customerArea?: string
   customerPhone: string
   area: string
   address: string
@@ -38,6 +43,8 @@ export type JobRequest = {
   estimate: number
   /** Final amount entered on completion, BDT */
   finalAmount?: number
+  jobStartedAt?: string
+  jobCompletedAt?: string
   status: BookingStatus
   paymentStatus: PaymentStatus
   notes?: string
