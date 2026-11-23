@@ -15,6 +15,7 @@ import { TechnicianCard } from "./technician-card"
 
 type Props = Omit<FeaturedService, "id" | "href" | "price"> & {
   availability: string
+  available: boolean
   technicianArea: string
   /** From the technician profile; Contact is hidden when missing. */
   technicianPhone?: string
@@ -29,6 +30,7 @@ export function ServiceOverview({
   reviews,
   technician,
   availability,
+  available,
   technicianArea,
   technicianPhone,
 }: Props) {
@@ -47,7 +49,7 @@ export function ServiceOverview({
             alt={title}
             fill
             priority
-            placeholder="blur"
+            unoptimized={typeof image === "string"}
             sizes="(min-width: 1024px) 55vw, 100vw"
             className="object-cover"
           />
@@ -63,21 +65,29 @@ export function ServiceOverview({
             {category}
           </Badge>
           <span className="inline-flex items-center gap-1.5 text-sm leading-none text-ink-soft">
-            <Star
-              aria-hidden
-              className="size-4 fill-status-amber-fg text-status-amber-fg"
-            />
-            <strong className="font-semibold text-ink">
-              {rating.toFixed(1)}
-            </strong>
-            <span>({reviews} reviews)</span>
+            {reviews > 0 ? (
+              <>
+                <Star
+                  aria-hidden
+                  className="size-4 fill-status-amber-fg text-status-amber-fg"
+                />
+                <strong className="font-semibold text-ink">
+                  {rating.toFixed(1)}
+                </strong>
+                <span>({reviews} reviews)</span>
+              </>
+            ) : (
+              <span>No reviews yet</span>
+            )}
           </span>
-          <span className="inline-flex items-center gap-1.5 text-sm leading-none font-semibold text-status-success-fg">
+          <span
+            className={`inline-flex items-center gap-1.5 text-sm leading-none font-semibold ${available ? "text-status-success-fg" : "text-status-cancelled-fg"}`}
+          >
             <span
               aria-hidden
-              className="size-2 rounded-full bg-status-success-fg"
+              className={`size-2 rounded-full ${available ? "bg-status-success-fg" : "bg-status-cancelled-fg"}`}
             />
-            Available
+            {available ? "Available" : "Not currently available"}
           </span>
         </div>
 
@@ -113,7 +123,11 @@ export function ServiceOverview({
       </ul>
 
       <BlurFade fade={false} delay={0.3} y={12} className="mt-3">
-        <TechnicianCard name={technician} area={technicianArea} phone={technicianPhone} />
+        <TechnicianCard
+          name={technician}
+          area={technicianArea}
+          phone={technicianPhone}
+        />
       </BlurFade>
     </div>
   )

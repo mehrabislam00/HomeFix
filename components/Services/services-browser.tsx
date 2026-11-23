@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import { SearchX } from "lucide-react"
 
 import {
@@ -39,6 +40,7 @@ export function ServicesBrowser({
   initialQuery?: string
   initialCategory?: string
 }) {
+  const router = useRouter()
   const [query, setQuery] = useState(initialQuery)
   const [category, setCategory] = useState(initialCategory)
   const [sort, setSort] = useState<SortKey>("top-rated")
@@ -53,6 +55,14 @@ export function ServicesBrowser({
       "",
       qs ? `?${qs}` : window.location.pathname
     )
+  }
+
+  function navigateCategory(q: string, cat: string) {
+    const params = new URLSearchParams()
+    if (q.trim()) params.set("q", q.trim())
+    if (cat !== "all") params.set("category", cat)
+    const qs = params.toString()
+    router.push(qs ? `/services?${qs}` : "/services")
   }
 
   const results = useMemo(() => {
@@ -89,7 +99,7 @@ export function ServicesBrowser({
         category={category}
         onCategoryChange={(slug) => {
           setCategory(slug)
-          syncUrl(query, slug)
+          navigateCategory(query, slug)
         }}
       />
 

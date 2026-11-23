@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { ListChecks } from "lucide-react"
 
 import { BlurFade } from "@/components/magic/blur-fade"
@@ -46,13 +47,23 @@ const emptyCopy: Record<string, { title: string; description: string }> = {
 export function RequestsList({
   jobs,
   onAction,
+  initialTab = REQUEST_TABS[0].key,
+  showDetails = true,
 }: {
   jobs: JobRequest[]
-  onAction?: (jobId: string, action: JobAction) => Promise<JobActionResult>
+  onAction?: (
+    jobId: string,
+    action: JobAction,
+    finalAmount?: number
+  ) => Promise<JobActionResult>
+  initialTab?: string
+  showDetails?: boolean
 }) {
-  const [tab, setTab] = useState<string>(REQUEST_TABS[0].key)
+  const [tab, setTab] = useState<string>(initialTab)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const router = useRouter()
 
   const byTab = (key: string) => {
     const statuses: readonly string[] =
@@ -61,13 +72,23 @@ export function RequestsList({
   }
   const visible = byTab(tab)
 
-  async function handleAction(job: JobRequest, action: JobAction) {
+  async function handleAction(
+    job: JobRequest,
+    action: JobAction,
+    finalAmount?: number
+  ) {
     if (!onAction) return
     setBusyId(job.id)
     setError("")
+    setSuccess("")
     try {
-      const result = await onAction(job.id, action)
-      if (!result.ok) setError(result.error)
+      const result = await onAction(job.id, action, finalAmount)
+      if (!result.ok) {
+        setError(result.error)
+      } else {
+        setSuccess("Booking status updated.")
+        router.refresh()
+      }
     } catch {
       setError("Unable to update this job. Please try again.")
     } finally {
@@ -83,6 +104,7 @@ export function RequestsList({
         onChange={(key) => {
           setTab(key)
           setError("")
+          setSuccess("")
         }}
         items={REQUEST_TABS.map(({ key, label }) => ({
           key,
@@ -97,6 +119,14 @@ export function RequestsList({
 
       <div className="mt-5 flex flex-col gap-3">
         <AuthError message={error} />
+        {success && (
+          <p
+            role="status"
+            className="rounded-2xl border border-status-success-fg/20 bg-status-success-bg p-4 text-sm font-medium text-status-success-fg"
+          >
+            {success}
+          </p>
+        )}
         {visible.length ? (
           visible.map((job, i) => (
             <BlurFade
@@ -107,6 +137,7 @@ export function RequestsList({
             >
               <JobRow
                 job={job}
+                showDetails={showDetails}
                 onAction={onAction ? handleAction : undefined}
                 busy={busyId === job.id}
               />

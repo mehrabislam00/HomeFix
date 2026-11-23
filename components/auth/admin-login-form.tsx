@@ -22,13 +22,35 @@ async function signInAsAdmin(values: LoginValues): Promise<AuthResult> {
   });
   if (error) return { ok: false, error: error.message || "Unable to sign in." };
 
-  const { data: session } = await authClient.getSession({ query: { disableCookieCache: true } });
-  const role: string | undefined = session?.user.role;
-  if (role !== "admin") {
+  try {
+    const { data: session, error: sessionError } = await authClient.getSession({
+      query: { disableCookieCache: true },
+    });
+    if (sessionError) {
+      throw new Error(sessionError.message || "Unable to verify administrator access.")
+    }
+
+    if (session?.user.role === "admin") return { ok: true }
+
     await authClient.signOut();
-    return { ok: false, error: "This account doesn't have administrator access." };
+    return {
+      ok: false,
+      error: "This account doesn't have administrator access.",
+    };
+  } catch (error) {
+    try {
+      await authClient.signOut();
+    } catch (signOutError) {
+      console.error("Unable to clear an unverified admin login.", signOutError)
+    }
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Unable to verify administrator access.",
+    }
   }
-  return { ok: true };
 }
 
 export function AdminLoginForm({

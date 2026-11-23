@@ -9,12 +9,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { btn } from "@/lib/button-styles"
 import { cn } from "@/lib/utils"
-import { featuredServices } from "@/lib/services-data"
 
 export function TopRatedServices({
-  services = featuredServices,
+  services,
 }: {
-  services?: FeaturedService[]
+  services: FeaturedService[]
 }) {
   return (
     <section

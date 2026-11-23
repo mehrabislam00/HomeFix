@@ -13,21 +13,27 @@ import { BookingStatusBadge, PaymentStatusBadge } from "./status-badge"
 export function BookingRow({
   booking,
   compact = false,
+  showDetails = true,
 }: {
   booking: Booking
   compact?: boolean
+  showDetails?: boolean
 }) {
   const {
-    serviceId,
+    id,
     serviceTitle,
     image,
     technician,
     date,
     estimate,
+    finalAmount,
     status,
     paymentStatus,
   } = booking
-  const when = format(parseISO(date), "MMM d, yyyy")
+  const when = date
+    ? format(parseISO(date), "MMM d, yyyy")
+    : "Date not provided"
+  const amount = finalAmount ?? estimate
 
   return (
     <div
@@ -48,6 +54,7 @@ export function BookingRow({
           src={image}
           alt=""
           fill
+          unoptimized={typeof image === "string"}
           sizes="72px"
           className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
         />
@@ -75,9 +82,9 @@ export function BookingRow({
               <CalendarDays aria-hidden className="size-3.5" />
               {when} ·{" "}
               <strong className="font-semibold text-ink">
-                {formatBDT(estimate)}
+                {formatBDT(amount)}
               </strong>{" "}
-              est.
+              {finalAmount ? "final" : "est."}
             </p>
           </>
         )}
@@ -85,7 +92,7 @@ export function BookingRow({
 
       {compact ? (
         <BookingStatusBadge status={status} className="shrink-0" />
-      ) : (
+      ) : showDetails ? (
         <Button
           className={cn(
             btn.md,
@@ -95,14 +102,14 @@ export function BookingRow({
           asChild
         >
           <Link
-            href={`/services/${serviceId}`}
+            href={`/customer-dashboard/bookings/${id}`}
             aria-label={`View ${serviceTitle}`}
           >
             <Eye aria-hidden className="size-4" />
             <span className="hidden sm:inline">Details</span>
           </Link>
         </Button>
-      )}
+      ) : null}
     </div>
   )
 }

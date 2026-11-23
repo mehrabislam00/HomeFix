@@ -44,7 +44,7 @@ export const dashboardConfig: Record<DashboardVariant, DashboardConfig> = {
     nav: [
       { label: "Overview", href: CUSTOMER_BASE, icon: LayoutGrid },
       {
-        label: "My Bookings",
+        label: "My Services",
         href: `${CUSTOMER_BASE}/bookings`,
         icon: CalendarCheck,
       },

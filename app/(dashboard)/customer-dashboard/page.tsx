@@ -2,26 +2,21 @@ import type { Metadata } from "next"
 import { format } from "date-fns"
 import { CalendarCheck, CircleCheck, Clock, Wallet } from "lucide-react"
 
-
-import {
-  ACTIVE_STATUSES,
-  firstName,
-  getBookings,
-} from "@/lib/dashboard-data"
+import { ACTIVE_STATUSES, firstName } from "@/lib/dashboard-data"
 import { getCustomerProfile } from "@/lib/Action/customer-actions"
+import { getCustomerBookings } from "@/lib/Action/booking-actions"
+import type { Booking } from "@/lib/dashboard-data"
 import { WelcomeBanner } from "@/components/Dashboard/welcome-banner"
 import { StatCard } from "@/components/Dashboard/stat-card"
 import { RecentBookings } from "@/components/Dashboard/recent-bookings"
 import { QuickActions } from "@/components/Dashboard/quick-actions"
+import { ApiError } from "@/components/Dashboard/api-error"
 import { redirect } from "next/navigation"
 
 export const metadata: Metadata = { title: "Dashboard — HomeFix" }
 
 const Dashboard = async () => {
-  const [profile, bookings] = await Promise.all([
-    getCustomerProfile(),
-    getBookings(),
-  ])
+  const profile = await getCustomerProfile()
   if (!profile.ok && profile.unauthorized) {
     redirect(profile.redirectTo ?? "/login")
   }
@@ -33,6 +28,21 @@ const Dashboard = async () => {
       >
         {profile.error}
       </p>
+    )
+  }
+  let bookings: Booking[]
+  try {
+    bookings = await getCustomerBookings()
+  } catch (error) {
+    console.error("Unable to load customer dashboard bookings.", error)
+    return (
+      <ApiError
+        message={
+          error instanceof Error
+            ? error.message
+            : "Please try again in a moment."
+        }
+      />
     )
   }
   const customer = profile.customer

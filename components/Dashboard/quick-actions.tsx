@@ -15,7 +15,7 @@ export type QuickAction = { label: string; href: string; icon: LucideIcon }
 export const customerQuickActions: QuickAction[] = [
   { label: "Explore services", href: "/services", icon: Search },
   {
-    label: "View my bookings",
+    label: "View my services",
     href: "/customer-dashboard/bookings",
     icon: CalendarCheck,
   },

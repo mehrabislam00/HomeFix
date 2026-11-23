@@ -4,43 +4,78 @@ import { notFound } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 
 import { BlurFade } from "@/components/magic/blur-fade"
-
-import {
-  allServices,
-  getRelatedServices,
-  getServiceById,
-} from "@/lib/services-data"
-import { ServiceOverview } from "@/components/Services/service-overview"
+import { ApiError } from "@/components/Dashboard/api-error"
 import { BookingCard } from "@/components/Services/booking-card"
 import { RelatedServices } from "@/components/Services/related-services"
+import { ServiceOverview } from "@/components/Services/service-overview"
+import type { FeaturedService } from "@/components/home/service-card"
+import type { ServiceListing } from "@/lib/service-booking-data"
+import { ServiceBookingApiError } from "@/lib/service-booking-api"
+import {
+  getAvailableServices,
+  getServiceById,
+} from "@/lib/Action/service-actions"
+import { createCustomerBooking } from "@/lib/Action/booking-actions"
 
 type Params = Promise<{ id: string }>
 
-export function generateStaticParams() {
-  return allServices.map(({ id }) => ({ id }))
-}
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata({
   params,
 }: {
   params: Params
 }): Promise<Metadata> {
-  const service = getServiceById((await params).id)
-  return service
-    ? { title: `${service.title} — HomeFix`, description: service.description }
-    : { title: "Service not found — HomeFix" }
+  try {
+    const service = await getServiceById((await params).id)
+    return {
+      title: `${service.title} — HomeFix`,
+      description: service.description,
+    }
+  } catch {
+    return { title: "Service — HomeFix" }
+  }
 }
 
 const Details = async ({ params }: { params: Params }) => {
   const { id } = await params
-  const service = getServiceById(id)
-  if (!service) notFound()
+  let service: ServiceListing
+  try {
+    service = await getServiceById(id)
+  } catch (error) {
+    if (error instanceof ServiceBookingApiError && error.status === 404) {
+      notFound()
+    }
+    console.error("Unable to load service details.", error)
+    return (
+      <main className="mx-auto max-w-[1440px] px-6 py-10 sm:px-10">
+        <ApiError
+          message={
+            error instanceof Error
+              ? error.message
+              : "Please try again in a moment."
+          }
+        />
+      </main>
+    )
+  }
 
-  const related = getRelatedServices(id)
+  let related: FeaturedService[] = []
+  let relatedError = ""
+  try {
+    related = (await getAvailableServices(service.category))
+      .filter((item) => item.id !== service.id)
+      .slice(0, 3)
+  } catch (error) {
+    console.error("Unable to load related services.", error)
+    relatedError =
+      error instanceof Error
+        ? error.message
+        : "Unable to load related services."
+  }
 
   return (
     <main className="relative isolate min-h-screen overflow-x-clip bg-ivory">
-      {/* Soft sage light-pools, same as the rest of the site */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[800px] overflow-hidden"
@@ -72,11 +107,24 @@ const Details = async ({ params }: { params: Params }) => {
             y={16}
             className="lg:sticky lg:top-28"
           >
-            <BookingCard serviceId={service.id} price={service.price} />
+            {service.available ? (
+              <BookingCard
+                serviceId={service.id}
+                price={service.price}
+                onSubmit={createCustomerBooking}
+              />
+            ) : (
+              <p
+                role="status"
+                className="glass-card rounded-[1.75rem] p-6 text-sm font-medium text-ink-soft"
+              >
+                This service is not currently accepting bookings.
+              </p>
+            )}
           </BlurFade>
         </div>
 
-        <RelatedServices services={related} />
+        <RelatedServices services={related} error={relatedError} />
       </div>
     </main>
   )

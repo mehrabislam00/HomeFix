@@ -1,13 +1,6 @@
 import type { StaticImageData } from "next/image"
 
-import { allServices } from "@/lib/services-data"
-
-/**
- * Customer dashboard booking and payment data.
- *
- * Booking and payment records remain sample data until those APIs are available.
- * The authenticated customer profile is loaded through role-specific user actions.
- */
+/** Customer dashboard data loaded from the customer APIs. */
 
 export type BookingStatus =
   | "requested"
@@ -22,12 +15,16 @@ export type Booking = {
   id: string
   serviceId: string
   serviceTitle: string
-  image: StaticImageData
+  image: StaticImageData | string
   technician: string
   /** ISO date, yyyy-MM-dd */
   date: string
   /** Estimated visit price, in BDT */
   estimate: number
+  finalAmount?: number
+  address?: string
+  phone?: string
+  notes?: string
   status: BookingStatus
   paymentStatus: PaymentStatus
 }
@@ -63,23 +60,6 @@ export const ACTIVE_STATUSES: BookingStatus[] = [
   "accepted",
   "in_progress",
 ]
-
-export async function getBookings(): Promise<Booking[]> {
-  const service = allServices.find((s) => s.id === "split-ac-deep-servicing")!
-  return [
-    {
-      id: "bk-1",
-      serviceId: service.id,
-      serviceTitle: service.title,
-      image: service.image,
-      technician: service.technician,
-      date: "2026-11-24",
-      estimate: service.price,
-      status: "cancelled",
-      paymentStatus: "unpaid",
-    },
-  ]
-}
 
 export async function getPayments(): Promise<Payment[]> {
   return []

@@ -1,13 +1,28 @@
+import type { StaticImageData } from "next/image"
 import type { FeaturedService } from "@/components/home/service-card"
-import acImg from "@/assets/cat-ac.jpg"
-import fridgeImg from "@/assets/cat-fridge.jpg"
-import electricalImg from "@/assets/cat-electrical.jpg"
-import devicesImg from "@/assets/cat-devices.jpg"
-import washerImg from "@/assets/cat-washer.jpg"
-import plumbingImg from "@/assets/cat-plumbing.jpg"
 
-/** Fallback data — replace with your API / DB query. */
-export const allServices: FeaturedService[] = [
+import acImg from "@/assets/cat-ac.jpg"
+import devicesImg from "@/assets/cat-devices.jpg"
+import electricalImg from "@/assets/cat-electrical.jpg"
+import fridgeImg from "@/assets/cat-fridge.jpg"
+import plumbingImg from "@/assets/cat-plumbing.jpg"
+import washerImg from "@/assets/cat-washer.jpg"
+
+export const serviceCategories = [
+  { slug: "all", label: "All services" },
+  { slug: "ac", label: "AC Repair" },
+  { slug: "fridge", label: "Refrigerator" },
+  { slug: "washer", label: "Washing Machine" },
+  { slug: "electrical", label: "Electrical" },
+  { slug: "plumbing", label: "Plumbing" },
+  { slug: "devices", label: "Device Repair" },
+] as const
+
+export const defaultAvailability = "Sat–Thu, 9:00 AM – 8:00 PM"
+
+export const allServices: (Omit<FeaturedService, "image"> & {
+  image: StaticImageData
+})[] = [
   {
     id: "split-ac-deep-servicing",
     title: "Split AC Deep Servicing",
@@ -101,47 +116,20 @@ export const allServices: FeaturedService[] = [
   },
 ]
 
-/** Category filters. `label` must match `FeaturedService.category`; `slug` is the ?category= value used across the site. */
-export const serviceCategories = [
-  { slug: "all", label: "All services" },
-  { slug: "ac", label: "AC Repair" },
-  { slug: "fridge", label: "Refrigerator" },
-  { slug: "washer", label: "Washing Machine" },
-  { slug: "electrical", label: "Electrical" },
-  { slug: "plumbing", label: "Plumbing" },
-  { slug: "devices", label: "Device Repair" },
-] as const
-
-/** Home page "Top-rated" strip: the six best-rated services (stable order for ties). */
-export const featuredServices: FeaturedService[] = [...allServices]
-  .sort((a, b) => b.rating - a.rating)
-  .slice(0, 6)
-
-/** Demo technician profiles until real profiles are available from the API / DB. */
-const technicianProfiles: Record<string, { area: string; phone: string }> = {
-  "Rafiqul Islam": { area: "Mirpur, Dhaka", phone: "+880 0000 000 001" },
-  "Tanvir Ahmed": { area: "Uttara, Dhaka", phone: "+880 0000 000 002" },
-}
-
-export const defaultAvailability = "Sat–Thu, 9:00 AM – 8:00 PM"
-
-export function getServiceById(id: string) {
-  const service = allServices.find((s) => s.id === id)
-  if (!service) return undefined
-  const technician = technicianProfiles[service.technician]
-  return {
-    ...service,
-    availability: defaultAvailability,
-    technicianArea: technician?.area ?? "Dhaka",
-    technicianPhone: technician?.phone,
+export function serviceImageForCategory(category: string): StaticImageData {
+  const value = category.toLowerCase()
+  if (value.includes("ac") || value.includes("air")) return acImg
+  if (value.includes("fridge") || value.includes("refrigerator"))
+    return fridgeImg
+  if (value.includes("wash")) return washerImg
+  if (value.includes("electric")) return electricalImg
+  if (value.includes("plumb") || value.includes("pipe")) return plumbingImg
+  if (
+    value.includes("device") ||
+    value.includes("laptop") ||
+    value.includes("phone")
+  ) {
+    return devicesImg
   }
-}
-
-export function getRelatedServices(id: string, limit = 3) {
-  const current = allServices.find((s) => s.id === id)
-  if (!current) return []
-  const candidates = allServices.filter((s) => s.id !== id)
-  const sameCategory = candidates.filter((s) => s.category === current.category)
-  const otherCategories = candidates.filter((s) => s.category !== current.category)
-  return [...sameCategory, ...otherCategories].slice(0, limit)
+  return acImg
 }

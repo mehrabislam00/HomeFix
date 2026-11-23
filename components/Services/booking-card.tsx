@@ -57,16 +57,25 @@ export function BookingCard({
     if (Object.values(next).some(Boolean)) return
 
     setPending(true)
-    const result = onSubmit
-      ? await onSubmit(values)
-      : ({
-          ok: false,
-          error:
-            "Booking isn't connected yet. Provide an onSubmit handler to BookingCard.",
-        } as const)
-    setPending(false)
-    if (result.ok) setDone(true)
-    else setFormError(result.error)
+    try {
+      const result = onSubmit
+        ? await onSubmit(values)
+        : ({
+            ok: false,
+            error:
+              "Booking isn't connected yet. Provide an onSubmit handler to BookingCard.",
+          } as const)
+      if (result.ok) setDone(true)
+      else setFormError(result.error)
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "Unable to submit your booking. Please try again."
+      )
+    } finally {
+      setPending(false)
+    }
   }
 
   return (

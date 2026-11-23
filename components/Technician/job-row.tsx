@@ -1,10 +1,15 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { format, parseISO } from "date-fns"
-import { CalendarDays, MapPin, Phone, UserRound } from "lucide-react"
+import { CalendarDays, Eye, MapPin, Phone, UserRound } from "lucide-react"
 
-import { BookingStatusBadge, PaymentStatusBadge } from "@/components/Dashboard/status-badge"
+import {
+  BookingStatusBadge,
+  PaymentStatusBadge,
+} from "@/components/Dashboard/status-badge"
 import { Button } from "@/components/ui/button"
 import type { BookingStatus } from "@/lib/dashboard-data"
 import { btn } from "@/lib/button-styles"
@@ -34,16 +39,36 @@ const actionsFor: Record<
 export function JobRow({
   job,
   compact = false,
+  showDetails = true,
   onAction,
   busy = false,
 }: {
   job: JobRequest
   compact?: boolean
-  onAction?: (job: JobRequest, action: JobAction) => void
+  showDetails?: boolean
+  onAction?: (job: JobRequest, action: JobAction, finalAmount?: number) => void
   busy?: boolean
 }) {
-  const when = format(parseISO(job.date), "MMM d, yyyy")
+  const when = job.date
+    ? format(parseISO(job.date), "MMM d, yyyy")
+    : "Date not provided"
   const amount = job.finalAmount ?? job.estimate
+  const [finalAmount, setFinalAmount] = useState("")
+  const [amountError, setAmountError] = useState("")
+
+  function runAction(action: JobAction) {
+    if (action === "complete" && finalAmount.trim()) {
+      const parsed = Number(finalAmount)
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        setAmountError("Enter a final amount greater than 0.")
+        return
+      }
+      onAction?.(job, action, parsed)
+    } else {
+      onAction?.(job, action)
+    }
+    setAmountError("")
+  }
 
   return (
     <div
@@ -64,6 +89,7 @@ export function JobRow({
           src={job.image}
           alt=""
           fill
+          unoptimized={typeof job.image === "string"}
           sizes="72px"
           className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
         />
@@ -94,16 +120,20 @@ export function JobRow({
             </p>
             <p className="flex items-center gap-1.5">
               <Phone aria-hidden className="size-3.5 shrink-0" />
-              <a
-                href={`tel:${job.customerPhone.replace(/[^\d+]/g, "")}`}
-                className="truncate rounded hover:text-forest focus-visible:outline-2 focus-visible:outline-sage"
-              >
-                {job.customerPhone}
-              </a>
+              {job.customerPhone ? (
+                <a
+                  href={`tel:${job.customerPhone.replace(/[^\d+]/g, "")}`}
+                  className="truncate rounded hover:text-forest focus-visible:outline-2 focus-visible:outline-sage"
+                >
+                  {job.customerPhone}
+                </a>
+              ) : (
+                <span>Phone not provided</span>
+              )}
             </p>
             <p className="flex items-center gap-1.5">
               <CalendarDays aria-hidden className="size-3.5 shrink-0" />
-              {when} · {job.timeSlot}
+              {job.timeSlot ? `${when} · ${job.timeSlot}` : when}
             </p>
             <p className="flex items-center gap-1.5">
               <MapPin aria-hidden className="size-3.5 shrink-0" />
@@ -128,14 +158,45 @@ export function JobRow({
               {formatBDT(amount)}
             </strong>
           </p>
+          {showDetails && (
+            <Button
+              type="button"
+              asChild
+              className={cn(
+                btn.md,
+                "border border-white/80 bg-white/70 text-forest shadow-[inset_0_1px_0_rgb(255_255_255/0.9)] hover:bg-forest hover:text-white"
+              )}
+            >
+              <Link href={`/technician-dashboard/requests/${job.id}`}>
+                <Eye aria-hidden className="size-4" />
+                Booking details
+              </Link>
+            </Button>
+          )}
           {actionsFor[job.status].length > 0 && (
             <div className="flex flex-wrap gap-2">
+              {job.status === "in_progress" && (
+                <label className="flex items-center gap-2 text-xs font-medium text-ink-soft">
+                  Final amount (optional)
+                  <input
+                    type="number"
+                    min="1"
+                    step="any"
+                    value={finalAmount}
+                    onChange={(event) => {
+                      setFinalAmount(event.target.value)
+                      setAmountError("")
+                    }}
+                    className="h-9 w-28 rounded-lg border border-line-strong bg-surface px-2 text-sm text-ink"
+                  />
+                </label>
+              )}
               {actionsFor[job.status].map(({ action, label, primary }) => (
                 <Button
                   key={action}
                   type="button"
                   disabled={!onAction || busy}
-                  onClick={() => onAction?.(job, action)}
+                  onClick={() => runAction(action)}
                   className={cn(
                     btn.md,
                     primary
@@ -143,10 +204,18 @@ export function JobRow({
                       : "border border-white/80 bg-white/70 text-forest shadow-[inset_0_1px_0_rgb(255_255_255/0.9)] hover:bg-status-rejected-bg hover:text-status-rejected-fg"
                   )}
                 >
-                  {label}
+                  {busy ? "Updating..." : label}
                 </Button>
               ))}
             </div>
+          )}
+          {amountError && (
+            <p
+              role="alert"
+              className="text-xs font-medium text-status-rejected-fg"
+            >
+              {amountError}
+            </p>
           )}
         </div>
       )}

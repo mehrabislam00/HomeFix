@@ -1,23 +1,23 @@
-import Image, { type StaticImageData } from "next/image";
-import Link from "next/link";
-import { ArrowRight, Star } from "lucide-react";
+import Image, { type StaticImageData } from "next/image"
+import Link from "next/link"
+import { ArrowRight, Star } from "lucide-react"
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { cn, formatBDT } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { cn, formatBDT } from "@/lib/utils"
 
 export type FeaturedService = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  image: StaticImageData;
-  rating: number;
-  reviews: number;
-  price: number;
-  technician: string;
-  href: string;
-};
+  id: string
+  title: string
+  description: string
+  category: string
+  image: StaticImageData | string
+  rating: number
+  reviews: number
+  price: number
+  technician: string
+  href: string
+}
 
 const initials = (name: string) =>
   name
@@ -25,7 +25,7 @@ const initials = (name: string) =>
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
-    .toUpperCase();
+    .toUpperCase()
 
 export function ServiceCard({
   title,
@@ -58,11 +58,12 @@ export function ServiceCard({
           alt={title}
           fill
           sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+          unoptimized={typeof image === "string"}
           className="object-cover transition-transform duration-700 ease-out group-hover:scale-105 motion-reduce:transition-none"
         />
         <Badge
           variant="outline"
-          className="absolute left-3 top-3 h-7 rounded-full border-white/70 bg-white/75 px-3 text-xs font-semibold leading-none text-forest shadow-sm backdrop-blur-md"
+          className="absolute top-3 left-3 h-7 rounded-full border-white/70 bg-white/75 px-3 text-xs leading-none font-semibold text-forest shadow-sm backdrop-blur-md"
         >
           {category}
         </Badge>
@@ -72,9 +73,20 @@ export function ServiceCard({
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <span className="inline-flex items-center gap-1.5 text-sm leading-none text-ink-soft">
-            <Star className="size-4 fill-status-amber-fg text-status-amber-fg" aria-hidden />
-            <strong className="font-semibold text-ink">{rating.toFixed(1)}</strong>
-            <span className="text-ink-muted">({reviews})</span>
+            {reviews > 0 ? (
+              <>
+                <Star
+                  className="size-4 fill-status-amber-fg text-status-amber-fg"
+                  aria-hidden
+                />
+                <strong className="font-semibold text-ink">
+                  {rating.toFixed(1)}
+                </strong>
+                <span className="text-ink-muted">({reviews})</span>
+              </>
+            ) : (
+              <span className="text-ink-muted">No reviews yet</span>
+            )}
           </span>
           <span className="leading-none">
             <strong className="font-[family-name:var(--font-manrope)] text-lg font-extrabold text-forest">
@@ -84,10 +96,12 @@ export function ServiceCard({
           </span>
         </div>
 
-        <h3 className="mt-3 font-[family-name:var(--font-manrope)] text-lg font-bold leading-tight tracking-tight text-forest">
+        <h3 className="mt-3 font-[family-name:var(--font-manrope)] text-lg leading-tight font-bold tracking-tight text-forest">
           {title}
         </h3>
-        <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-ink-soft">{description}</p>
+        <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-ink-soft">
+          {description}
+        </p>
 
         {/* Footer pinned to the bottom so cards align */}
         <div className="mt-auto pt-5">
@@ -98,7 +112,9 @@ export function ServiceCard({
                   {initials(technician)}
                 </AvatarFallback>
               </Avatar>
-              <span className="truncate text-sm text-ink-soft">{technician}</span>
+              <span className="truncate text-sm text-ink-soft">
+                {technician}
+              </span>
             </span>
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-forest">
               Details
@@ -111,5 +127,5 @@ export function ServiceCard({
         </div>
       </div>
     </Link>
-  );
+  )
 }

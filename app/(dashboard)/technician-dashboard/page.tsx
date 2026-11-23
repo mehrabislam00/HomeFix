@@ -12,8 +12,11 @@ import {
   Wrench,
 } from "lucide-react"
 
-
-import { QuickActions, type QuickAction } from "@/components/Dashboard/quick-actions"
+import {
+  QuickActions,
+  type QuickAction,
+} from "@/components/Dashboard/quick-actions"
+import { ApiError } from "@/components/Dashboard/api-error"
 import { StatCard } from "@/components/Dashboard/stat-card"
 import { WelcomeBanner } from "@/components/Dashboard/welcome-banner"
 
@@ -24,35 +27,71 @@ import { btn } from "@/lib/button-styles"
 import {
   completionRate,
   getEarnings,
-  getJobRequests,
-  getTechnicianServices,
   summarizeEarnings,
 } from "@/lib/technician-data"
+import { getTechnicianServices } from "@/lib/Action/service-actions"
+import { getTechnicianBookings } from "@/lib/Action/booking-actions"
 import { cn, formatBDT } from "@/lib/utils"
-import { SampleDataNotice } from "@/components/Dashboard/sample-data-notice"
 import { JobSection } from "@/components/Technician/job-section"
 import { EarningsSummaryCard } from "@/components/Technician/earnings-summary"
 import { CompletionRate } from "@/components/Technician/completion-rate"
+import type { JobRequest, TechnicianService } from "@/lib/technician-data"
 
 export const metadata: Metadata = { title: "Overview — HomeFix Technician" }
 
 const quickActions: QuickAction[] = [
-  { label: "Add a new service", href: "/technician-dashboard/add-service", icon: CirclePlus },
-  { label: "Manage my services", href: "/technician-dashboard/my-services", icon: Wrench },
-  { label: "Respond to requests", href: "/technician-dashboard/requests", icon: ListChecks },
-  { label: "Update profile", href: "/technician-dashboard/profile", icon: User },
+  {
+    label: "Add a new service",
+    href: "/technician-dashboard/add-service",
+    icon: CirclePlus,
+  },
+  {
+    label: "Manage my services",
+    href: "/technician-dashboard/my-services",
+    icon: Wrench,
+  },
+  {
+    label: "Respond to requests",
+    href: "/technician-dashboard/requests",
+    icon: ListChecks,
+  },
+  {
+    label: "Update profile",
+    href: "/technician-dashboard/profile",
+    icon: User,
+  },
 ]
 
 const Overview = async () => {
-  const [profile, services, jobs, earnings] = await Promise.all([
-    getTechnicianProfile(),
-    getTechnicianServices(),
-    getJobRequests(),
-    getEarnings(),
-  ])
+  let profile: Awaited<ReturnType<typeof getTechnicianProfile>>
+  let services: TechnicianService[]
+  let jobs: JobRequest[]
+  try {
+    const data = await Promise.all([
+      getTechnicianProfile(),
+      getTechnicianServices(),
+      getTechnicianBookings(),
+    ])
+    profile = data[0]
+    services = data[1]
+    jobs = data[2]
+  } catch (error) {
+    console.error("Unable to load technician dashboard data.", error)
+    return (
+      <ApiError
+        message={
+          error instanceof Error
+            ? error.message
+            : "Please try again in a moment."
+        }
+      />
+    )
+  }
+  const earnings = getEarnings(jobs)
   const name = profile.ok ? firstName(profile.customer.name) : "there"
 
-  const count = (status: string) => jobs.filter((j) => j.status === status).length
+  const count = (status: string) =>
+    jobs.filter((j) => j.status === status).length
   const pending = count("requested")
   const summary = summarizeEarnings(jobs)
   const approved = services.filter((s) => s.approval === "approved").length
@@ -88,11 +127,6 @@ const Overview = async () => {
           </Button>
         }
       />
-
-      <SampleDataNotice>
-        Jobs, services and earnings below are sample data until the technician
-        APIs are connected. Your profile is live.
-      </SampleDataNotice>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard

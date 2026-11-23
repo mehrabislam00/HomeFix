@@ -3,18 +3,38 @@ import Link from "next/link"
 import { CirclePlus } from "lucide-react"
 
 import { PageHeader } from "@/components/Dashboard/page-header"
+import { ApiError } from "@/components/Dashboard/api-error"
 
 import { Button } from "@/components/ui/button"
 import { btn } from "@/lib/button-styles"
-import { getTechnicianServices } from "@/lib/technician-data"
+import {
+  getTechnicianServices,
+  updateTechnicianService,
+  updateTechnicianServiceAvailability,
+  deleteTechnicianService,
+} from "@/lib/Action/service-actions"
 import { cn } from "@/lib/utils"
-import { SampleDataNotice } from "@/components/Dashboard/sample-data-notice"
 import { ServicesList } from "@/components/Technician/services-list"
+import type { TechnicianService } from "@/lib/technician-data"
 
 export const metadata: Metadata = { title: "My Services — HomeFix Technician" }
 
 const MyServices = async () => {
-  const services = await getTechnicianServices()
+  let services: TechnicianService[]
+  try {
+    services = await getTechnicianServices()
+  } catch (error) {
+    console.error("Unable to load technician services.", error)
+    return (
+      <ApiError
+        message={
+          error instanceof Error
+            ? error.message
+            : "Please try again in a moment."
+        }
+      />
+    )
+  }
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -22,7 +42,11 @@ const MyServices = async () => {
         description="Manage your listings, availability and approval status."
         action={
           <Button
-            className={cn(btn.lg, btn.primary, "shine relative overflow-hidden")}
+            className={cn(
+              btn.lg,
+              btn.primary,
+              "shine relative overflow-hidden"
+            )}
             asChild
           >
             <Link href="/technician-dashboard/add-service">
@@ -32,9 +56,14 @@ const MyServices = async () => {
           </Button>
         }
       />
-      <SampleDataNotice />
-      {/* Pass `actions` (toggle / edit / delete handlers) to enable the controls. */}
-      <ServicesList services={services} />
+      <ServicesList
+        services={services}
+        actions={{
+          onToggleAvailable: updateTechnicianServiceAvailability,
+          onUpdate: updateTechnicianService,
+          onDelete: deleteTechnicianService,
+        }}
+      />
     </div>
   )
 }

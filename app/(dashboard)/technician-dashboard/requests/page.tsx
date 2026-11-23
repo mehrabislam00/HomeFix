@@ -1,26 +1,41 @@
 import type { Metadata } from "next"
 
 import { PageHeader } from "@/components/Dashboard/page-header"
-
-import { getJobRequests } from "@/lib/technician-data"
-import { SampleDataNotice } from "@/components/Dashboard/sample-data-notice"
+import { ApiError } from "@/components/Dashboard/api-error"
+import {
+  getTechnicianBookings,
+  updateTechnicianBooking,
+} from "@/lib/Action/booking-actions"
 import { RequestsList } from "@/components/Technician/requests-list"
+import type { JobRequest } from "@/lib/technician-data"
 
 export const metadata: Metadata = {
   title: "Manage Requests — HomeFix Technician",
 }
 
 const Requests = async () => {
-  const jobs = await getJobRequests()
+  let jobs: JobRequest[]
+  try {
+    jobs = await getTechnicianBookings()
+  } catch (error) {
+    console.error("Unable to load technician booking requests.", error)
+    return (
+      <ApiError
+        message={
+          error instanceof Error
+            ? error.message
+            : "Please try again in a moment."
+        }
+      />
+    )
+  }
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Manage Requests"
         description="Accept new jobs, start work and complete them with the final amount."
       />
-      <SampleDataNotice />
-      {/* Pass `onAction` (server action returning { ok }) to enable job buttons. */}
-      <RequestsList jobs={jobs} />
+      <RequestsList jobs={jobs} onAction={updateTechnicianBooking} />
     </div>
   )
 }
