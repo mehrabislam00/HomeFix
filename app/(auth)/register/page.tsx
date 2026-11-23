@@ -9,6 +9,7 @@ import { authCompletionPath, safeReturnTo } from "@/lib/route-access"
 export const metadata: Metadata = { title: "Create Account — HomeFix" }
 
 const Register = async ({
+  // @ts-expect-error Server Component
   searchParams,
 }: {
   searchParams: Promise<{ next?: string | string[] }>
