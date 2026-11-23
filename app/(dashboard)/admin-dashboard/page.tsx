@@ -18,6 +18,7 @@ import { StatCard } from "@/components/Dashboard/stat-card"
 import { WelcomeBanner } from "@/components/Dashboard/welcome-banner"
 import { Button } from "@/components/ui/button"
 import { countByStatus } from "@/lib/admin-data"
+import type { AdminDashboardStats, AdminReport } from "@/lib/admin-data"
 import {
   getAdminBookings,
   getAdminDashboardStats,
@@ -33,38 +34,42 @@ import { cn } from "@/lib/utils"
 export const metadata: Metadata = { title: "Overview — HomeFix Admin" }
 
 const Overview = async () => {
-  let profile: Awaited<ReturnType<typeof getAdminProfile>>
-  let usersResult: Awaited<ReturnType<typeof getAdminUsers>>
-  let services: Awaited<ReturnType<typeof getAdminServices>>
-  let bookings: Awaited<ReturnType<typeof getAdminBookings>>
-  let stats: Awaited<ReturnType<typeof getAdminDashboardStats>>
-  let reports: Awaited<ReturnType<typeof getAdminReports>>
-  try {
-    ;[profile, usersResult, services, bookings, stats, reports] =
-      await Promise.all([
-        getAdminProfile(),
-        getAdminUsers(),
-        getAdminServices(),
-        getAdminBookings(),
-        getAdminDashboardStats(),
-        getAdminReports(),
-      ])
-  } catch (error) {
-    return (
-      <div className="flex flex-col gap-6">
-        <ApiError
-          message={
-            error instanceof Error
-              ? error.message
-              : "Unable to load admin dashboard data."
-          }
-        />
-      </div>
-    )
-  }
-  const { users } = usersResult
-  const name = profile.ok ? firstName(profile.customer.name) : "there"
-  const pending = stats.services.pending
+  const [
+    profileResult,
+    usersResult,
+    servicesResult,
+    bookingsResult,
+    statsResult,
+    reportsResult,
+  ] = await Promise.allSettled([
+    getAdminProfile(),
+    getAdminUsers(),
+    getAdminServices(),
+    getAdminBookings(),
+    getAdminDashboardStats(),
+    getAdminReports(),
+  ])
+  const profile =
+    profileResult.status === "fulfilled" ? profileResult.value : null
+  const usersData =
+    usersResult.status === "fulfilled" ? usersResult.value : null
+  const services =
+    servicesResult.status === "fulfilled" ? servicesResult.value : null
+  const bookings =
+    bookingsResult.status === "fulfilled" ? bookingsResult.value : null
+  const stats: AdminDashboardStats | null =
+    statsResult.status === "fulfilled" ? statsResult.value : null
+  const reports: AdminReport | null =
+    reportsResult.status === "fulfilled" ? reportsResult.value : null
+  const users = usersData?.users ?? []
+  const name = profile?.ok ? firstName(profile.customer.name) : "there"
+  const pending = stats?.services.pending ?? 0
+  const usersUnavailable = !usersData?.live
+  const usersError =
+    usersData?.error ??
+    (usersResult.status === "rejected" && usersResult.reason instanceof Error
+      ? usersResult.reason.message
+      : "The user list could not be loaded.")
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,54 +97,100 @@ const Overview = async () => {
         }
       />
 
-      {!usersResult.live && (
+      {usersUnavailable && (
+        <ApiError title="Unable to load users" message={usersError} />
+      )}
+
+      {stats ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Total users"
+            value={stats.users.total}
+            hint={`${stats.users.customers} customers · ${stats.users.technicians} technicians`}
+            icon={Users}
+            delay={0.05}
+          />
+          <StatCard
+            label="Total services"
+            value={stats.services.total}
+            hint={`${pending} pending approval`}
+            icon={Wrench}
+            tone="amber"
+            delay={0.1}
+          />
+          <StatCard
+            label="Total bookings"
+            value={stats.bookings.total}
+            hint={`${stats.bookings.completed} completed`}
+            icon={CalendarCheck}
+            tone="blue"
+            delay={0.15}
+          />
+          <StatCard
+            label="Revenue"
+            value={stats.payments.available ? "—" : "Unavailable"}
+            hint={
+              stats.payments.message ??
+              "Payment reporting is not available yet."
+            }
+            icon={Wallet}
+            tone="green"
+            delay={0.2}
+          />
+        </div>
+      ) : (
         <ApiError
-          title="Unable to load users"
-          message={usersResult.error ?? "The user list could not be loaded."}
+          title="Unable to load dashboard statistics"
+          message={
+            statsResult.status === "rejected" &&
+            statsResult.reason instanceof Error
+              ? statsResult.reason.message
+              : "The dashboard statistics could not be loaded."
+          }
         />
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Total users"
-          value={stats.users.total}
-          hint={`${stats.users.customers} customers · ${stats.users.technicians} technicians`}
-          icon={Users}
-          delay={0.05}
-        />
-        <StatCard
-          label="Total services"
-          value={stats.services.total}
-          hint={`${pending} pending approval`}
-          icon={Wrench}
-          tone="amber"
-          delay={0.1}
-        />
-        <StatCard
-          label="Total bookings"
-          value={stats.bookings.total}
-          hint={`${stats.bookings.completed} completed`}
-          icon={CalendarCheck}
-          tone="blue"
-          delay={0.15}
-        />
-        <StatCard
-          label="Revenue"
-          value={stats.payments.available ? "—" : "Unavailable"}
-          hint={
-            stats.payments.message ?? "Payment reporting is not available yet."
-          }
-          icon={Wallet}
-          tone="green"
-          delay={0.2}
-        />
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-2">
-        <StatusChart data={countByStatus(reports.bookingStatuses)} />
-        <RecentSubmissions services={services} />
+        {reports ? (
+          <StatusChart data={countByStatus(reports.bookingStatuses)} />
+        ) : (
+          <ApiError
+            title="Unable to load booking reports"
+            message={
+              reportsResult.status === "rejected" &&
+              reportsResult.reason instanceof Error
+                ? reportsResult.reason.message
+                : "Booking reports could not be loaded."
+            }
+          />
+        )}
+        {services ? (
+          <RecentSubmissions services={services} />
+        ) : (
+          <ApiError
+            title="Unable to load services"
+            message={
+              servicesResult.status === "rejected" &&
+              servicesResult.reason instanceof Error
+                ? servicesResult.reason.message
+                : "Services could not be loaded."
+            }
+          />
+        )}
         <RecentUsers users={users} />
-        <RecentAdminBookings bookings={bookings} />
+        {bookings ? (
+          <RecentAdminBookings bookings={bookings} />
+        ) : (
+          <ApiError
+            title="Unable to load bookings"
+            message={
+              bookingsResult.status === "rejected" &&
+              bookingsResult.reason instanceof Error
+                ? bookingsResult.reason.message
+                : "Bookings could not be loaded."
+            }
+          />
+        )}
         <section className="glass-card rounded-[1.75rem] p-5 sm:p-7">
           <h2 className="font-[family-name:var(--font-manrope)] text-xl font-extrabold tracking-tight text-forest">
             Most booked services
@@ -147,7 +198,7 @@ const Overview = async () => {
           <p className="mt-1 text-sm text-ink-soft">
             Service demand based on completed booking records.
           </p>
-          {reports.mostBookedServices.length ? (
+          {reports?.mostBookedServices.length ? (
             <ol className="mt-5 flex flex-col gap-3">
               {reports.mostBookedServices.slice(0, 5).map((service) => (
                 <li

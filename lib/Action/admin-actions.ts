@@ -333,7 +333,7 @@ async function mutateAdmin(
 }
 
 /** Every admin action re-checks the session: server actions are public endpoints. */
-const getAdminSession = cache(async () => {
+export const getAdminSession = cache(async () => {
   let session: Awaited<ReturnType<typeof auth.api.getSession>>
   try {
     session = await auth.api.getSession({
@@ -658,7 +658,10 @@ export async function updateAdminUser(
     "PATCH",
     values,
     ["users"],
-    [profileCacheTag("customer", userId), profileCacheTag("technician", userId)],
+    [
+      profileCacheTag("customer", userId),
+      profileCacheTag("technician", userId),
+    ],
     [...CUSTOMER_DATA_PATHS, ...TECHNICIAN_DATA_PATHS]
   )
 }
@@ -983,7 +986,9 @@ export async function getAdminTransactions(): Promise<{
       throw new Error("The admin API returned invalid payment statistics.")
     }
     return {
-      transactions: collection(result, "payments").map(normalizeAdminTransaction),
+      transactions: collection(result, "payments").map(
+        normalizeAdminTransaction
+      ),
       statistics: normalizeAdminPaymentStatistics(statsResult),
       available: true,
     }
@@ -1021,7 +1026,12 @@ function normalizeAdminTransaction(value: unknown): AdminTransaction {
   const id = recordId(value._id ?? value.id)
   const amount = value.amount
   const paidAt = asDate(value.paidAt)
-  if (!id || typeof amount !== "number" || !Number.isFinite(amount) || !paidAt) {
+  if (
+    !id ||
+    typeof amount !== "number" ||
+    !Number.isFinite(amount) ||
+    !paidAt
+  ) {
     throw new Error("The admin API returned incomplete payment details.")
   }
   if (value.paymentStatus !== "paid") {
@@ -1029,7 +1039,9 @@ function normalizeAdminTransaction(value: unknown): AdminTransaction {
   }
   const currency = requiredText("currency").toUpperCase()
   if (currency !== "BDT") {
-    throw new Error("The admin API returned a payment in an unsupported currency.")
+    throw new Error(
+      "The admin API returned a payment in an unsupported currency."
+    )
   }
   return {
     id,
@@ -1097,7 +1109,9 @@ function normalizeAdminPaymentStatistics(
   const byStatus = Object.fromEntries(
     Object.entries(value.byStatus).map(([key, count]) => {
       if (typeof count !== "number" || !Number.isFinite(count)) {
-        throw new Error("The admin API returned an invalid payment status count.")
+        throw new Error(
+          "The admin API returned an invalid payment status count."
+        )
       }
       return [key, count]
     })

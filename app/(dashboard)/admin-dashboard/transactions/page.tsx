@@ -15,29 +15,15 @@ import { formatBDT } from "@/lib/utils"
 export const metadata: Metadata = { title: "Payments — HomeFix Admin" }
 
 const Transactions = async () => {
-  let paymentResult: Awaited<ReturnType<typeof getAdminTransactions>>
-  let bookings: Awaited<ReturnType<typeof getAdminBookings>>
-  try {
-    ;[paymentResult, bookings] = await Promise.all([
-      getAdminTransactions(),
-      getAdminBookings(),
-    ])
-  } catch (error) {
-    return (
-      <div className="flex flex-col gap-6">
-        <PageHeader
-          title="Payments"
-          description="Verified customer payments collected by HomeFix."
-        />
-        <ApiError
-          message={
-            error instanceof Error ? error.message : "Unable to load payments."
-          }
-        />
-      </div>
-    )
-  }
-  const { transactions } = paymentResult
+  const [paymentResult, bookingsResult] = await Promise.allSettled([
+    getAdminTransactions(),
+    getAdminBookings(),
+  ])
+  const paymentData =
+    paymentResult.status === "fulfilled" ? paymentResult.value : null
+  const bookings =
+    bookingsResult.status === "fulfilled" ? bookingsResult.value : []
+  const transactions = paymentData?.transactions ?? []
   const summary = summarizeTransactions(transactions, bookings)
 
   return (
@@ -46,12 +32,32 @@ const Transactions = async () => {
         title="Payments"
         description="Verified customer payments collected by HomeFix."
       />
-      {!paymentResult.available && (
+      {paymentResult.status === "rejected" && (
+        <ApiError
+          title="Unable to load payments"
+          message={
+            paymentResult.reason instanceof Error
+              ? paymentResult.reason.message
+              : "Unable to load payment records."
+          }
+        />
+      )}
+      {bookingsResult.status === "rejected" && (
+        <ApiError
+          title="Unable to load booking summaries"
+          message={
+            bookingsResult.reason instanceof Error
+              ? bookingsResult.reason.message
+              : "Unable to load bookings for payment summaries."
+          }
+        />
+      )}
+      {paymentData && !paymentData.available && (
         <p
           role="status"
           className="rounded-2xl border border-status-requested-fg/15 bg-status-requested-bg px-4 py-3 text-sm font-medium text-status-requested-fg"
         >
-          {paymentResult.message ??
+          {paymentData.message ??
             "Payment records are temporarily unavailable. Please try again later."}
         </p>
       )}
@@ -60,8 +66,8 @@ const Transactions = async () => {
         <StatCard
           label="Collected revenue"
           value={
-            paymentResult.available
-              ? formatBDT(paymentResult.statistics.totalRevenue)
+            paymentData?.available
+              ? formatBDT(paymentData.statistics.totalRevenue)
               : "Unavailable"
           }
           icon={Wallet}
@@ -71,8 +77,8 @@ const Transactions = async () => {
         <StatCard
           label="Verified payments"
           value={
-            paymentResult.available
-              ? paymentResult.statistics.totalPayments
+            paymentData?.available
+              ? paymentData.statistics.totalPayments
               : "Unavailable"
           }
           icon={ReceiptText}
@@ -81,12 +87,12 @@ const Transactions = async () => {
         <StatCard
           label="Average payment"
           value={
-            paymentResult.available && paymentResult.statistics.totalPayments
+            paymentData?.available && paymentData.statistics.totalPayments
               ? formatBDT(
-                  paymentResult.statistics.totalRevenue /
-                    paymentResult.statistics.totalPayments
+                  paymentData.statistics.totalRevenue /
+                    paymentData.statistics.totalPayments
                 )
-              : paymentResult.available
+              : paymentData?.available
                 ? formatBDT(0)
                 : "Unavailable"
           }
@@ -97,14 +103,14 @@ const Transactions = async () => {
         <StatCard
           label="Awaiting payment"
           value={
-            paymentResult.available
+            paymentData?.available && bookingsResult.status === "fulfilled"
               ? formatBDT(summary.awaitingAmount)
               : "Unavailable"
           }
           hint={
-            paymentResult.available
+            paymentData?.available && bookingsResult.status === "fulfilled"
               ? `${summary.awaitingJobs} completed ${summary.awaitingJobs === 1 ? "job" : "jobs"}`
-              : paymentResult.message
+              : paymentData?.message
           }
           icon={Clock}
           tone="amber"
@@ -112,7 +118,7 @@ const Transactions = async () => {
         />
       </div>
 
-      <TransactionsTable transactions={transactions} />
+      {paymentData && <TransactionsTable transactions={transactions} />}
     </div>
   )
 }

@@ -2,16 +2,9 @@ import { redirect } from "next/navigation"
 
 import { DashboardShell } from "@/components/Dashboard/dashboard-shell"
 import type { DashboardVariant } from "@/lib/dashboard-config"
-import { getAdminProfile } from "@/lib/Action/admin-actions"
-import { getCustomerProfile } from "@/lib/Action/customer-actions"
-import { getTechnicianProfile } from "@/lib/Action/technician-actions"
+import { getProfileSession } from "@/lib/Action/profile-action-utils"
+import { getAdminSession } from "@/lib/Action/admin-actions"
 import { ApiError } from "./api-error"
-
-const loaders = {
-  customer: getCustomerProfile,
-  technician: getTechnicianProfile,
-  admin: getAdminProfile,
-} as const
 
 const roleLabel = {
   customer: "Customer",
@@ -30,28 +23,56 @@ export async function RoleDashboardLayout({
   variant: DashboardVariant
   children: React.ReactNode
 }) {
-  const result = await loaders[variant]()
-  if (!result.ok && result.unauthorized) {
-    redirect(result.redirectTo ?? "/login")
+  const role = roleLabel[variant]
+  if (variant === "customer" || variant === "technician") {
+    const access = await getProfileSession(variant)
+    if (!access.ok) {
+      if (access.unauthorized) redirect(access.redirectTo ?? "/login")
+      return (
+        <DashboardShell user={{ name: role, role }} variant={variant}>
+          {children}
+        </DashboardShell>
+      )
+    }
+    return (
+      <DashboardShell
+        user={{
+          name: access.session.user.name,
+          role,
+          image: access.session.user.image ?? undefined,
+          email: access.session.user.email,
+        }}
+        variant={variant}
+      >
+        {children}
+      </DashboardShell>
+    )
   }
 
-  const role = roleLabel[variant]
-  const user = result.ok
-    ? {
-        name: result.customer.name,
-        role,
-        image: result.customer.image,
-        email: result.customer.email,
-      }
-    : { name: role, role }
+  const access = await getAdminSession()
+  if (!access.ok) {
+    if (access.unauthorized) redirect(access.redirectTo ?? "/admin/login")
+    return (
+      <DashboardShell user={{ name: role, role }} variant={variant}>
+        <ApiError
+          title="Unable to verify your session"
+          message={access.error}
+        />
+      </DashboardShell>
+    )
+  }
 
   return (
-    <DashboardShell user={user} variant={variant}>
-      {result.ok ? (
-        children
-      ) : (
-        <ApiError title="Unable to verify your session" message={result.error} />
-      )}
+    <DashboardShell
+      user={{
+        name: access.session.user.name,
+        role,
+        image: access.session.user.image ?? undefined,
+        email: access.session.user.email,
+      }}
+      variant={variant}
+    >
+      {children}
     </DashboardShell>
   )
 }

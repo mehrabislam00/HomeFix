@@ -63,22 +63,26 @@ const quickActions: QuickAction[] = [
 ]
 
 const Overview = async () => {
-  let profile: Awaited<ReturnType<typeof getTechnicianProfile>>
-  let services: TechnicianService[]
-  let jobs: JobRequest[]
-  let paymentData: Awaited<ReturnType<typeof getTechnicianPayments>>
-  try {
-    const data = await Promise.all([
+  const [profileResult, servicesResult, jobsResult, paymentResult] =
+    await Promise.allSettled([
       getTechnicianProfile(),
       getTechnicianServices(),
       getTechnicianBookings(),
       getTechnicianPayments(),
     ])
-    profile = data[0]
-    services = data[1]
-    jobs = data[2]
-    paymentData = data[3]
-  } catch (error) {
+
+  if (
+    profileResult.status === "rejected" &&
+    servicesResult.status === "rejected" &&
+    jobsResult.status === "rejected" &&
+    paymentResult.status === "rejected"
+  ) {
+    const error = [
+      profileResult.reason,
+      servicesResult.reason,
+      jobsResult.reason,
+      paymentResult.reason,
+    ].find((reason) => reason instanceof Error)
     console.error("Unable to load technician dashboard data.", error)
     return (
       <ApiError
@@ -90,6 +94,25 @@ const Overview = async () => {
       />
     )
   }
+
+  const profile =
+    profileResult.status === "fulfilled" ? profileResult.value : null
+  const services: TechnicianService[] =
+    servicesResult.status === "fulfilled" ? servicesResult.value : []
+  const jobs: JobRequest[] =
+    jobsResult.status === "fulfilled" ? jobsResult.value : []
+  const paymentData =
+    paymentResult.status === "fulfilled"
+      ? paymentResult.value
+      : {
+          payments: [],
+          statistics: {
+            totalPayments: 0,
+            totalRevenue: 0,
+            currency: "BDT",
+            byStatus: {},
+          },
+        }
   const earnings = paymentData.payments.map((payment) => ({
     id: payment.id,
     jobId: payment.bookingId,
@@ -98,7 +121,8 @@ const Overview = async () => {
     amount: payment.amount,
     paidAt: payment.paidAt,
   }))
-  const name = profile.ok ? firstName(profile.customer.name) : "there"
+  const name =
+    profile?.ok ? firstName(profile.customer.name) : "there"
 
   const count = (status: string) =>
     jobs.filter((j) => j.status === status).length
