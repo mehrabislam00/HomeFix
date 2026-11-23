@@ -1,15 +1,16 @@
-import type { Metadata } from "next";
-import { Inter, Manrope } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from "next"
+import { Inter, Manrope } from "next/font/google"
+import { Toaster } from "@/components/ui/toast"
+import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" })
 
 export const metadata: Metadata = {
   title: "HomeFix — Expert repairs. Trusted technicians.",
   description:
     "Book reliable professionals for your home appliances, electrical and plumbing needs.",
-};
+}
 
 export default function RootLayout({
   children,
@@ -19,7 +20,8 @@ export default function RootLayout({
       {/* inter.className sets font-family directly, so it works regardless of Tailwind font config */}
       <body className={`${inter.className} bg-ivory text-ink antialiased`}>
         {children}
+        <Toaster />
       </body>
     </html>
-  );
+  )
 }

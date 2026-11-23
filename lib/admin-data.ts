@@ -74,14 +74,28 @@ export type AdminBooking = {
 
 export type AdminTransaction = {
   id: string
+  transactionId: string
+  stripeSessionId: string
   bookingId: string
   serviceTitle: string
   customer: string
+  customerEmail: string
   technician: string
+  technicianEmail: string
   /** BDT */
   amount: number
+  currency: string
+  paymentStatus: "paid"
+  method: string
   /** ISO date, yyyy-MM-dd */
   paidAt: string
+}
+
+export type AdminPaymentStatistics = {
+  totalPayments: number
+  totalRevenue: number
+  currency: string
+  byStatus: Record<string, number>
 }
 
 export type AdminDashboardStats = {

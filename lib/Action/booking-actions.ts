@@ -10,6 +10,7 @@ import {
   unwrapCollection,
 } from "@/lib/service-booking-data"
 import { requestServiceBookingApi } from "@/lib/service-booking-api"
+import { paymentApiHeaders } from "@/lib/payment-api-signature"
 import type { BookingResult, BookingValues } from "@/lib/booking-types"
 import type { Booking } from "@/lib/dashboard-data"
 import type { ServiceListing } from "@/lib/service-booking-data"
@@ -53,6 +54,40 @@ export async function getCustomerBooking(bookingId: string): Promise<Booking> {
     `/customers/${encodeURIComponent(id)}/bookings/${encodeURIComponent(bookingId)}`
   )
   return normalizeCustomerBooking(booking, new Map())
+}
+
+export type CancelBookingResult = { ok: true } | { ok: false; error: string }
+
+export async function cancelCustomerBooking(
+  bookingId: string
+): Promise<CancelBookingResult> {
+  if (typeof bookingId !== "string" || !bookingId.trim()) {
+    return { ok: false, error: "Choose a valid booking to cancel." }
+  }
+
+  try {
+    const customerId = await userIdForRole("customer")
+    const path = `/bookings/${encodeURIComponent(bookingId)}/cancel`
+    await requestServiceBookingApi(path, {
+      method: "PATCH",
+      headers: paymentApiHeaders("PATCH", path, "customer", customerId),
+    })
+    revalidatePath("/customer-dashboard")
+    revalidatePath("/customer-dashboard/bookings")
+    revalidatePath(
+      `/customer-dashboard/bookings/${encodeURIComponent(bookingId)}`
+    )
+    return { ok: true }
+  } catch (error) {
+    console.error("Unable to cancel customer booking.", error)
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Unable to cancel this service request. Please try again.",
+    }
+  }
 }
 
 export async function createCustomerBooking(

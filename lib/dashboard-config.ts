@@ -76,6 +76,11 @@ export const dashboardConfig: Record<DashboardVariant, DashboardConfig> = {
         href: `${TECHNICIAN_BASE}/requests`,
         icon: ListChecks,
       },
+      {
+        label: "Payment History",
+        href: `${TECHNICIAN_BASE}/payments`,
+        icon: CreditCard,
+      },
       { label: "Profile", href: `${TECHNICIAN_BASE}/profile`, icon: User },
     ],
   },
@@ -96,7 +101,7 @@ export const dashboardConfig: Record<DashboardVariant, DashboardConfig> = {
         icon: CalendarCheck,
       },
       {
-        label: "Transactions",
+        label: "Payments",
         href: `${ADMIN_BASE}/transactions`,
         icon: Receipt,
       },

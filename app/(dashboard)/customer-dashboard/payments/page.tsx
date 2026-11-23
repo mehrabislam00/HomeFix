@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import { Clock, ReceiptText, Wallet } from "lucide-react"
 
-import { getPayments } from "@/lib/dashboard-data"
 import { getCustomerBookings } from "@/lib/Action/booking-actions"
+import { getCustomerPayments } from "@/lib/Action/payment-actions"
 import { formatBDT } from "@/lib/utils"
 import { PageHeader } from "@/components/Dashboard/page-header"
 import { StatCard } from "@/components/Dashboard/stat-card"
@@ -13,12 +13,15 @@ import type { Booking } from "@/lib/dashboard-data"
 export const metadata: Metadata = { title: "Payment History — HomeFix" }
 
 const Payments = async () => {
-  const payments = await getPayments()
+  let payments: Awaited<ReturnType<typeof getCustomerPayments>>
   let bookings: Booking[]
   try {
-    bookings = await getCustomerBookings()
+    ;[payments, bookings] = await Promise.all([
+      getCustomerPayments(),
+      getCustomerBookings(),
+    ])
   } catch (error) {
-    console.error("Unable to load payment booking data.", error)
+    console.error("Unable to load customer payment data.", error)
     return (
       <ApiError
         message={
@@ -29,9 +32,10 @@ const Payments = async () => {
       />
     )
   }
-  const total = payments.reduce((sum, p) => sum + p.amount, 0)
   const awaiting = bookings.filter(
-    (b) => b.status === "completed" && b.paymentStatus === "unpaid"
+    (booking) =>
+      ["accepted", "in_progress", "completed"].includes(booking.status) &&
+      booking.paymentStatus === "unpaid"
   ).length
 
   return (
@@ -44,14 +48,14 @@ const Payments = async () => {
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           label="Total paid"
-          value={formatBDT(total)}
+          value={formatBDT(payments.statistics.totalRevenue)}
           icon={Wallet}
           tone="green"
           delay={0.05}
         />
         <StatCard
           label="Payments"
-          value={payments.length}
+          value={payments.statistics.totalPayments}
           icon={ReceiptText}
           delay={0.1}
         />
@@ -65,7 +69,7 @@ const Payments = async () => {
         />
       </div>
 
-      <PaymentsList payments={payments} />
+      <PaymentsList payments={payments.payments} />
     </div>
   )
 }

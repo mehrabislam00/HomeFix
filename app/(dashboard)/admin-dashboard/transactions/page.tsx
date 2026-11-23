@@ -12,7 +12,7 @@ import {
 import { summarizeTransactions } from "@/lib/admin-data"
 import { formatBDT } from "@/lib/utils"
 
-export const metadata: Metadata = { title: "Transactions — HomeFix Admin" }
+export const metadata: Metadata = { title: "Payments — HomeFix Admin" }
 
 const Transactions = async () => {
   let paymentResult: Awaited<ReturnType<typeof getAdminTransactions>>
@@ -26,8 +26,8 @@ const Transactions = async () => {
     return (
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Transactions"
-          description="Every confirmed payment on HomeFix."
+          title="Payments"
+          description="Verified customer payments collected by HomeFix."
         />
         <ApiError
           message={
@@ -43,8 +43,8 @@ const Transactions = async () => {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Transactions"
-        description="Every confirmed payment on HomeFix."
+        title="Payments"
+        description="Verified customer payments collected by HomeFix."
       />
       {!paymentResult.available && (
         <p
@@ -52,30 +52,43 @@ const Transactions = async () => {
           className="rounded-2xl border border-status-requested-fg/15 bg-status-requested-bg px-4 py-3 text-sm font-medium text-status-requested-fg"
         >
           {paymentResult.message ??
-            "Payment records are not available until payment integration is implemented."}
+            "Payment records are temporarily unavailable. Please try again later."}
         </p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Total revenue"
+          label="Collected revenue"
           value={
-            paymentResult.available ? formatBDT(summary.revenue) : "Unavailable"
+            paymentResult.available
+              ? formatBDT(paymentResult.statistics.totalRevenue)
+              : "Unavailable"
           }
           icon={Wallet}
           tone="green"
           delay={0.05}
         />
         <StatCard
-          label="Transactions"
-          value={paymentResult.available ? summary.count : "Unavailable"}
+          label="Verified payments"
+          value={
+            paymentResult.available
+              ? paymentResult.statistics.totalPayments
+              : "Unavailable"
+          }
           icon={ReceiptText}
           delay={0.1}
         />
         <StatCard
           label="Average payment"
           value={
-            paymentResult.available ? formatBDT(summary.average) : "Unavailable"
+            paymentResult.available && paymentResult.statistics.totalPayments
+              ? formatBDT(
+                  paymentResult.statistics.totalRevenue /
+                    paymentResult.statistics.totalPayments
+                )
+              : paymentResult.available
+                ? formatBDT(0)
+                : "Unavailable"
           }
           icon={TrendingUp}
           tone="blue"

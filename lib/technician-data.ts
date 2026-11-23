@@ -62,12 +62,10 @@ export type Earning = {
 }
 
 export type EarningsSummary = {
-  paid: number
-  paidJobs: number
+  customerPaymentsToHomeFix: number
+  paidBookings: number
   /** Completed jobs the customer has not paid for yet */
-  pending: number
-  /** Paid earnings minus payouts already withdrawn */
-  available: number
+  unpaidCompletedAmount: number
 }
 
 export const REQUEST_TABS = [
@@ -82,29 +80,17 @@ export const REQUEST_TABS = [
   statuses: readonly BookingStatus[]
 }[]
 
-export function getEarnings(jobs: JobRequest[]): Earning[] {
-  return jobs
-    .filter((job) => job.status === "completed" && job.paymentStatus === "paid")
-    .map((job) => ({
-      id: `earn-${job.id}`,
-      jobId: job.id,
-      serviceTitle: job.serviceTitle,
-      customerName: job.customerName,
-      amount: job.finalAmount ?? job.estimate,
-      paidAt: job.date,
-    }))
-    .sort((a, b) => b.paidAt.localeCompare(a.paidAt))
-}
-
 export function summarizeEarnings(list: JobRequest[]): EarningsSummary {
   const amount = (job: JobRequest) => job.finalAmount ?? job.estimate
   const completed = list.filter((job) => job.status === "completed")
-  const paidJobs = completed.filter((job) => job.paymentStatus === "paid")
-  const paid = paidJobs.reduce((sum, job) => sum + amount(job), 0)
-  const pending = completed
+  const unpaidCompletedAmount = completed
     .filter((job) => job.paymentStatus === "unpaid")
     .reduce((sum, job) => sum + amount(job), 0)
-  return { paid, paidJobs: paidJobs.length, pending, available: paid }
+  return {
+    customerPaymentsToHomeFix: 0,
+    paidBookings: 0,
+    unpaidCompletedAmount,
+  }
 }
 
 /** Share of non-cancelled jobs that reached completion, as a 0–100 integer. */

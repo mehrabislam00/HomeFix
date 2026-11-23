@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth"
 import {
   type AdminBooking,
   type AdminDashboardStats,
+  type AdminPaymentStatistics,
   type AdminReport,
   type AdminRole,
   type AdminService,
@@ -245,8 +246,9 @@ async function requestAdminApi(
   path: string,
   init: RequestInit = {}
 ): Promise<unknown> {
+  const apiPath = `/admin/${encodeURIComponent(adminId)}${path}`
   const response = await fetch(
-    `${API_BASE_URL}/admin/${encodeURIComponent(adminId)}${path}`,
+    `${API_BASE_URL}${apiPath}`,
     {
       ...init,
       headers: {
@@ -908,33 +910,29 @@ export async function getAdminReports(): Promise<AdminReport> {
 
 export async function getAdminTransactions(): Promise<{
   transactions: AdminTransaction[]
+  statistics: AdminPaymentStatistics
   available: boolean
   message?: string
 }> {
   try {
     const adminId = await getAdminId()
-    const result = await requestAdminApi(adminId, "/payments")
+    const [result, statsResult] = await Promise.all([
+      requestAdminApi(adminId, "/payments"),
+      requestAdminApi(adminId, "/payments/stats"),
+    ])
+    if (!isRecord(statsResult)) {
+      throw new Error("The admin API returned invalid payment statistics.")
+    }
     return {
-      transactions: collection(result, "payments").map((value) => {
-        if (!isRecord(value)) {
-          throw new Error("The admin API returned an invalid payment.")
-        }
-        return {
-          id: recordId(value._id ?? value.id),
-          bookingId: text(value.bookingId),
-          serviceTitle: text(value.serviceTitle),
-          customer: text(value.customerName),
-          technician: text(value.technicianName),
-          amount: number(value.amount ?? value.finalAmount),
-          paidAt: asDate(value.paidAt ?? value.createdAt),
-        }
-      }),
+      transactions: collection(result, "payments").map(normalizeAdminTransaction),
+      statistics: normalizeAdminPaymentStatistics(statsResult),
       available: true,
     }
   } catch (error) {
     if (error instanceof AdminApiError && error.status === 501) {
       return {
         transactions: [],
+        statistics: emptyAdminPaymentStatistics(),
         available: false,
         message: error.message,
       }
@@ -942,6 +940,7 @@ export async function getAdminTransactions(): Promise<{
     console.error("Unable to load admin transactions.", error)
     return {
       transactions: [],
+      statistics: emptyAdminPaymentStatistics(),
       available: false,
       message:
         error instanceof Error ? error.message : "Unable to load transactions.",
@@ -949,9 +948,54 @@ export async function getAdminTransactions(): Promise<{
   }
 }
 
+function normalizeAdminTransaction(value: unknown): AdminTransaction {
+  if (!isRecord(value)) {
+    throw new Error("The admin API returned an invalid payment.")
+  }
+  const requiredText = (key: string) => {
+    const result = value[key]
+    if (typeof result !== "string" || !result.trim()) {
+      throw new Error(`The admin API returned a payment without ${key}.`)
+    }
+    return result
+  }
+  const id = recordId(value._id ?? value.id)
+  const amount = value.amount
+  const paidAt = asDate(value.paidAt)
+  if (!id || typeof amount !== "number" || !Number.isFinite(amount) || !paidAt) {
+    throw new Error("The admin API returned incomplete payment details.")
+  }
+  if (value.paymentStatus !== "paid") {
+    throw new Error("The admin API returned an unverified payment record.")
+  }
+  const currency = requiredText("currency").toUpperCase()
+  if (currency !== "BDT") {
+    throw new Error("The admin API returned a payment in an unsupported currency.")
+  }
+  return {
+    id,
+    transactionId: requiredText("transactionId"),
+    stripeSessionId: requiredText("stripeSessionId"),
+    bookingId: requiredText("bookingId"),
+    serviceTitle: requiredText("serviceTitle"),
+    customer: requiredText("customerName"),
+    customerEmail: requiredText("customerEmail"),
+    technician: requiredText("technicianName"),
+    technicianEmail: requiredText("technicianEmail"),
+    amount,
+    currency,
+    paymentStatus: "paid",
+    method: "Stripe",
+    paidAt,
+  }
+}
+
 export async function getAdminTransaction(
   paymentId: string
 ): Promise<AdminTransaction | null> {
+  if (typeof paymentId !== "string" || !paymentId.trim()) {
+    throw new Error("A valid payment ID is required.")
+  }
   try {
     const adminId = await getAdminId()
     const value = await requestAdminApi(
@@ -961,17 +1005,48 @@ export async function getAdminTransaction(
     if (!isRecord(value)) {
       throw new Error("The admin API returned an invalid payment.")
     }
-    return {
-      id: recordId(value._id ?? value.id),
-      bookingId: text(value.bookingId),
-      serviceTitle: text(value.serviceTitle),
-      customer: text(value.customerName),
-      technician: text(value.technicianName),
-      amount: number(value.amount ?? value.finalAmount),
-      paidAt: asDate(value.paidAt ?? value.createdAt),
-    }
+    return normalizeAdminTransaction(value)
   } catch (error) {
     if (error instanceof AdminApiError && error.status === 501) return null
     throw error
+  }
+}
+
+function emptyAdminPaymentStatistics(): AdminPaymentStatistics {
+  return {
+    totalPayments: 0,
+    totalRevenue: 0,
+    currency: "BDT",
+    byStatus: {},
+  }
+}
+
+function normalizeAdminPaymentStatistics(
+  value: ApiRecord
+): AdminPaymentStatistics {
+  if (
+    typeof value.totalPayments !== "number" ||
+    !Number.isFinite(value.totalPayments) ||
+    typeof value.totalRevenue !== "number" ||
+    !Number.isFinite(value.totalRevenue) ||
+    typeof value.currency !== "string" ||
+    value.currency.toUpperCase() !== "BDT" ||
+    !isRecord(value.byStatus)
+  ) {
+    throw new Error("The admin API returned incomplete payment statistics.")
+  }
+  const byStatus = Object.fromEntries(
+    Object.entries(value.byStatus).map(([key, count]) => {
+      if (typeof count !== "number" || !Number.isFinite(count)) {
+        throw new Error("The admin API returned an invalid payment status count.")
+      }
+      return [key, count]
+    })
+  )
+  return {
+    totalPayments: value.totalPayments,
+    totalRevenue: value.totalRevenue,
+    currency: value.currency.toUpperCase(),
+    byStatus,
   }
 }

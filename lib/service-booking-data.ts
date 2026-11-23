@@ -339,6 +339,7 @@ export function normalizeCustomerBooking(
       stringValue(source.technicianName, technician?.name) ??
       serviceInfo?.technician ??
       "Technician",
+    technicianImage: stringValue(source.technicianImage, technician?.image),
     technicianEmail: stringValue(source.technicianEmail, technician?.email),
     technicianPhone: stringValue(source.technicianPhone, technician?.phone),
     date,
@@ -351,6 +352,8 @@ export function normalizeCustomerBooking(
       source.notes,
       source.description
     ),
+    transactionId: stringValue(source.transactionId, source.paymentIntentId),
+    paidAt: asTimestamp(source.paidAt, source.paymentDate),
     jobStartedAt: asTimestamp(source.jobStartedAt),
     jobCompletedAt: asTimestamp(source.jobCompletedAt),
     status: statusOf(source.status ?? source.bookingStatus),

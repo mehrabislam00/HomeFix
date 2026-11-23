@@ -19,6 +19,7 @@ export type Booking = {
   serviceDescription?: string
   image: StaticImageData | string
   technician: string
+  technicianImage?: string
   technicianEmail?: string
   technicianPhone?: string
   /** ISO date, yyyy-MM-dd */
@@ -29,6 +30,8 @@ export type Booking = {
   address?: string
   phone?: string
   notes?: string
+  transactionId?: string
+  paidAt?: string
   jobStartedAt?: string
   jobCompletedAt?: string
   status: BookingStatus
@@ -44,6 +47,14 @@ export type Payment = {
   /** ISO date, yyyy-MM-dd */
   paidAt: string
   method: string
+  transactionId: string
+  stripeSessionId: string
+  paymentStatus: "paid"
+  customerName: string
+  customerEmail: string
+  technicianName: string
+  technicianEmail: string
+  currency: string
 }
 
 export type Customer = {
@@ -66,10 +77,6 @@ export const ACTIVE_STATUSES: BookingStatus[] = [
   "accepted",
   "in_progress",
 ]
-
-export async function getPayments(): Promise<Payment[]> {
-  return []
-}
 
 export const firstName = (name: string) => name.split(" ")[0] ?? name
 export const initialsOf = (name: string) =>

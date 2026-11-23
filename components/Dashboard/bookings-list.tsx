@@ -13,6 +13,7 @@ import {
 } from "@/lib/dashboard-data"
 import { btn } from "@/lib/button-styles"
 import { cn } from "@/lib/utils"
+import type { CancelBookingResult } from "@/lib/Action/booking-actions"
 import { BookingRow } from "./booking-row"
 import { EmptyState } from "./empty-state"
 import { SegmentedFilter } from "./segmented-filter"
@@ -29,10 +30,23 @@ const filters: {
   { key: "cancelled", label: "Cancelled", match: (s) => s === "cancelled" },
 ]
 
-export function BookingsList({ bookings }: { bookings: Booking[] }) {
+export function BookingsList({
+  bookings,
+  onCancelRequest,
+}: {
+  bookings: Booking[]
+  onCancelRequest: (bookingId: string) => Promise<CancelBookingResult>
+}) {
   const [filter, setFilter] = useState("all")
+  const [statusOverrides, setStatusOverrides] = useState<
+    Partial<Record<string, BookingStatus>>
+  >({})
   const current = filters.find((f) => f.key === filter) ?? filters[0]
-  const visible = bookings.filter((b) => current.match(b.status))
+  const currentBookings = bookings.map((booking) => ({
+    ...booking,
+    status: statusOverrides[booking.id] ?? booking.status,
+  }))
+  const visible = currentBookings.filter((b) => current.match(b.status))
 
   return (
     <div>
@@ -56,7 +70,17 @@ export function BookingsList({ bookings }: { bookings: Booking[] }) {
               delay={Math.min(i, 5) * 0.05}
               y={12}
             >
-              <BookingRow booking={b} />
+              <BookingRow
+                booking={b}
+                showPayNow
+                onCancelRequest={onCancelRequest}
+                onCancelled={(bookingId) =>
+                  setStatusOverrides((currentOverrides) => ({
+                    ...currentOverrides,
+                    [bookingId]: "cancelled",
+                  }))
+                }
+              />
             </BlurFade>
           ))
         ) : (

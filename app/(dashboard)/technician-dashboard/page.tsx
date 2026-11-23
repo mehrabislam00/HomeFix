@@ -26,11 +26,11 @@ import { firstName } from "@/lib/dashboard-data"
 import { btn } from "@/lib/button-styles"
 import {
   completionRate,
-  getEarnings,
   summarizeEarnings,
 } from "@/lib/technician-data"
 import { getTechnicianServices } from "@/lib/Action/service-actions"
 import { getTechnicianBookings } from "@/lib/Action/booking-actions"
+import { getTechnicianPayments } from "@/lib/Action/payment-actions"
 import { cn, formatBDT } from "@/lib/utils"
 import { JobSection } from "@/components/Technician/job-section"
 import { EarningsSummaryCard } from "@/components/Technician/earnings-summary"
@@ -66,15 +66,18 @@ const Overview = async () => {
   let profile: Awaited<ReturnType<typeof getTechnicianProfile>>
   let services: TechnicianService[]
   let jobs: JobRequest[]
+  let paymentData: Awaited<ReturnType<typeof getTechnicianPayments>>
   try {
     const data = await Promise.all([
       getTechnicianProfile(),
       getTechnicianServices(),
       getTechnicianBookings(),
+      getTechnicianPayments(),
     ])
     profile = data[0]
     services = data[1]
     jobs = data[2]
+    paymentData = data[3]
   } catch (error) {
     console.error("Unable to load technician dashboard data.", error)
     return (
@@ -87,13 +90,24 @@ const Overview = async () => {
       />
     )
   }
-  const earnings = getEarnings(jobs)
+  const earnings = paymentData.payments.map((payment) => ({
+    id: payment.id,
+    jobId: payment.bookingId,
+    serviceTitle: payment.serviceTitle,
+    customerName: payment.customerName ?? "Customer",
+    amount: payment.amount,
+    paidAt: payment.paidAt,
+  }))
   const name = profile.ok ? firstName(profile.customer.name) : "there"
 
   const count = (status: string) =>
     jobs.filter((j) => j.status === status).length
   const pending = count("requested")
-  const summary = summarizeEarnings(jobs)
+  const summary = {
+    ...summarizeEarnings(jobs),
+    customerPaymentsToHomeFix: paymentData.statistics.totalRevenue,
+    paidBookings: paymentData.statistics.totalPayments,
+  }
   const approved = services.filter((s) => s.approval === "approved").length
   const upcoming = jobs
     .filter((j) => j.status === "accepted")
@@ -165,9 +179,9 @@ const Overview = async () => {
           delay={0.25}
         />
         <StatCard
-          label="Paid earnings"
-          value={formatBDT(summary.paid)}
-          hint={`${summary.paidJobs} paid ${summary.paidJobs === 1 ? "job" : "jobs"}`}
+          label="Customer payments to HomeFix"
+          value={formatBDT(summary.customerPaymentsToHomeFix)}
+          hint={`${summary.paidBookings} verified ${summary.paidBookings === 1 ? "payment" : "payments"}`}
           icon={Wallet}
           tone="green"
           delay={0.3}

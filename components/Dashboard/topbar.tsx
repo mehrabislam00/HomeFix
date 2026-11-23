@@ -1,17 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { formatDistanceToNow } from "date-fns"
 import {
+  AlertCircle,
   Bell,
   BellOff,
+  BriefcaseBusiness,
+  CalendarCheck,
+  CheckCheck,
+  CircleCheck,
   House,
   LayoutGrid,
   LogOut,
+  LoaderCircle,
   Menu,
   Search,
   User,
+  X,
 } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -29,6 +37,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { signOut } from "@/lib/Action/auth-actions"
+import {
+  deleteNotification,
+  getNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+  type NotificationItem,
+} from "@/lib/Action/notification-actions"
+import type { NotificationType } from "@/lib/notification-types"
+import { NOTIFICATIONS_UPDATED_EVENT } from "@/lib/notification-types"
 import { dashboardConfig, type DashboardVariant } from "@/lib/dashboard-config"
 import { initialsOf } from "@/lib/dashboard-data"
 import { cn } from "@/lib/utils"
@@ -43,7 +60,13 @@ const itemClass =
 const iconClass =
   "size-[18px] text-sage-deep transition-colors group-hover:text-forest"
 
-function UserAvatar({ user, className }: { user: DashboardUser; className?: string }) {
+function UserAvatar({
+  user,
+  className,
+}: {
+  user: DashboardUser
+  className?: string
+}) {
   return (
     <Avatar size="lg" className={className}>
       {user.image && <AvatarImage src={user.image} alt={user.name} />}
@@ -54,38 +77,288 @@ function UserAvatar({ user, className }: { user: DashboardUser; className?: stri
   )
 }
 
-/** Notifications: no notifications source exists yet, so this shows an honest empty state. */
 function Notifications() {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [items, setItems] = useState<NotificationItem[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const applyFeed = useCallback(
+    (result: Awaited<ReturnType<typeof getNotifications>>) => {
+      if (result.ok) {
+        setItems(result.feed.notifications)
+        setUnreadCount(result.feed.unreadCount)
+        setError(null)
+      } else {
+        setError(result.error)
+      }
+      setLoading(false)
+    },
+    []
+  )
+
+  useEffect(() => {
+    let active = true
+    const load = () => {
+      if (document.visibilityState !== "visible") return
+      void getNotifications().then((result) => {
+        if (active) applyFeed(result)
+      })
+    }
+    load()
+    const interval = window.setInterval(load, 45_000)
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, load)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, load)
+    }
+  }, [applyFeed])
+
+  const refresh = () => {
+    void getNotifications().then(applyFeed)
+  }
+
+  const openNotification = async (item: NotificationItem) => {
+    if (!item.readAt) {
+      setBusy(true)
+      const result = await markNotificationAsRead(item.id)
+      setBusy(false)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      const readAt = new Date().toISOString()
+      setItems((current) =>
+        current.map((notification) =>
+          notification.id === item.id
+            ? { ...notification, readAt }
+            : notification
+        )
+      )
+      setUnreadCount((count) => Math.max(0, count - 1))
+      window.dispatchEvent(new Event(NOTIFICATIONS_UPDATED_EVENT))
+    }
+    setOpen(false)
+    if (item.href) router.push(item.href)
+  }
+
+  const markAllRead = async () => {
+    if (!unreadCount || busy) return
+    setBusy(true)
+    const result = await markAllNotificationsAsRead()
+    setBusy(false)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    const readAt = new Date().toISOString()
+    setItems((current) =>
+      current.map((item) => (item.readAt ? item : { ...item, readAt }))
+    )
+    setUnreadCount(0)
+    setError(null)
+    window.dispatchEvent(new Event(NOTIFICATIONS_UPDATED_EVENT))
+  }
+
+  const dismiss = async (item: NotificationItem) => {
+    setBusy(true)
+    const result = await deleteNotification(item.id)
+    setBusy(false)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    setItems((current) => current.filter(({ id }) => id !== item.id))
+    if (!item.readAt) setUnreadCount((count) => Math.max(0, count - 1))
+    window.dispatchEvent(new Event(NOTIFICATIONS_UPDATED_EVENT))
+  }
+
   return (
-    <Popover>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (next) refresh()
+      }}
+    >
       <PopoverTrigger
-        aria-label="Notifications"
+        aria-label={
+          unreadCount > 0
+            ? `Notifications, ${unreadCount} unread`
+            : "Notifications"
+        }
         className="relative flex size-11 items-center justify-center rounded-full border border-white/70 bg-white/60 text-forest transition-all duration-200 outline-none hover:bg-white focus-visible:ring-4 focus-visible:ring-sage/40 active:scale-95 motion-reduce:active:scale-100"
       >
         <Bell aria-hidden strokeWidth={1.75} className="size-[18px]" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 flex min-w-5 items-center justify-center rounded-full border-2 border-ivory bg-forest px-1 text-[10px] leading-4 font-bold text-white">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
       </PopoverTrigger>
       <PopoverContent
         align="end"
         sideOffset={14}
-        className={cn(popoverClass, "w-[min(20rem,calc(100vw-1.5rem))]")}
+        className={cn(
+          popoverClass,
+          "w-[min(25rem,calc(100vw-1.5rem))] overflow-hidden p-0"
+        )}
       >
-        <p className="px-3 pt-2 font-[family-name:var(--font-manrope)] text-sm font-bold text-forest">
-          Notifications
-        </p>
-        <div className="flex flex-col items-center px-4 py-8 text-center">
-          <span className="flex size-12 items-center justify-center rounded-2xl bg-pale-sage text-forest ring-1 ring-forest/10">
-            <BellOff aria-hidden strokeWidth={1.75} className="size-6" />
-          </span>
-          <p className="mt-3 text-sm font-semibold text-forest">
-            You&apos;re all caught up
-          </p>
-          <p className="mt-1 text-xs text-ink-soft">
-            Booking updates will appear here.
-          </p>
+        <div className="flex items-center justify-between border-b border-forest/10 px-4 py-3">
+          <div>
+            <p className="font-[family-name:var(--font-manrope)] text-sm font-bold text-forest">
+              Notifications
+            </p>
+            <p className="mt-0.5 text-xs text-ink-soft">
+              {unreadCount ? `${unreadCount} unread` : "Your latest updates"}
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={!unreadCount || busy}
+            onClick={() => void markAllRead()}
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold text-forest transition-colors hover:bg-forest/10 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <CheckCheck aria-hidden className="size-3.5" />
+            Mark all read
+          </button>
         </div>
+        {error && (
+          <div
+            role="alert"
+            className="mx-3 mt-3 flex items-center justify-between gap-2 rounded-xl bg-status-rejected-bg px-3 py-2 text-xs text-status-rejected-fg"
+          >
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="shrink-0 font-semibold underline underline-offset-2"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+        {loading && items.length === 0 ? (
+          <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-ink-soft">
+            <LoaderCircle aria-hidden className="size-4 animate-spin" />
+            Loading notifications
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex flex-col items-center px-5 py-9 text-center">
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-pale-sage text-forest ring-1 ring-forest/10">
+              <BellOff aria-hidden strokeWidth={1.75} className="size-6" />
+            </span>
+            <p className="mt-3 text-sm font-semibold text-forest">
+              You&apos;re all caught up
+            </p>
+            <p className="mt-1 text-xs text-ink-soft">
+              Booking and account updates will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="max-h-[min(60vh,32rem)] overflow-y-auto p-2">
+            {items.map((item) => {
+              const content = (
+                <>
+                  <NotificationIcon type={item.type} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-start gap-2">
+                      <span className="min-w-0 flex-1 text-sm leading-5 font-semibold text-forest">
+                        {item.title}
+                      </span>
+                      {!item.readAt && (
+                        <span
+                          aria-label="Unread"
+                          className="mt-1.5 size-2 shrink-0 rounded-full bg-sage-deep"
+                        />
+                      )}
+                    </span>
+                    <span className="mt-0.5 block text-xs leading-5 text-ink-soft">
+                      {item.message}
+                    </span>
+                    <time
+                      dateTime={item.createdAt}
+                      className="mt-1.5 block text-[11px] font-medium text-ink-muted"
+                    >
+                      {notificationTime(item.createdAt)}
+                    </time>
+                  </span>
+                </>
+              )
+              return (
+                <div
+                  key={item.id}
+                  className={cn(
+                    "group relative flex items-start gap-3 rounded-2xl p-3 pr-9 transition-colors",
+                    item.readAt
+                      ? "hover:bg-forest/[0.04]"
+                      : "bg-pale-sage/60 hover:bg-pale-sage"
+                  )}
+                >
+                  {item.href ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void openNotification(item)}
+                      className="flex min-w-0 flex-1 items-start gap-3 text-left outline-none focus-visible:rounded-xl focus-visible:ring-2 focus-visible:ring-sage"
+                    >
+                      {content}
+                    </button>
+                  ) : (
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      {content}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    aria-label={`Dismiss ${item.title}`}
+                    disabled={busy}
+                    onClick={() => void dismiss(item)}
+                    className="absolute top-2.5 right-2.5 flex size-6 items-center justify-center rounded-full text-ink-muted opacity-100 transition-all hover:bg-white hover:text-forest focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-sage sm:opacity-0 sm:group-hover:opacity-100"
+                  >
+                    <X aria-hidden className="size-3.5" />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   )
+}
+
+function NotificationIcon({ type }: { type: NotificationType }) {
+  const Icon =
+    type === "payment_completed"
+      ? CircleCheck
+      : type === "payment_issue"
+        ? AlertCircle
+        : type === "payment_processing"
+          ? LoaderCircle
+          : type.startsWith("service")
+            ? BriefcaseBusiness
+            : type === "booking_created" || type.startsWith("booking")
+              ? CalendarCheck
+              : type === "account_update"
+                ? AlertCircle
+                : Bell
+  return (
+    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/80 text-sage-deep ring-1 ring-forest/10">
+      <Icon aria-hidden strokeWidth={1.8} className="size-[17px]" />
+    </span>
+  )
+}
+
+function notificationTime(value: string) {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? "Recently"
+    : formatDistanceToNow(date, { addSuffix: true })
 }
 
 function AccountMenu({
@@ -109,7 +382,7 @@ function AccountMenu({
       <PopoverTrigger
         aria-label="Open account menu"
         className={cn(
-          "rounded-full outline-none transition-transform duration-150 focus-visible:ring-4 focus-visible:ring-sage/40 active:scale-95 motion-reduce:active:scale-100",
+          "rounded-full transition-transform duration-150 outline-none focus-visible:ring-4 focus-visible:ring-sage/40 active:scale-95 motion-reduce:active:scale-100",
           open && "ring-4 ring-sage/30"
         )}
       >

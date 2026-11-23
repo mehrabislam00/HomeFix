@@ -3,7 +3,10 @@ import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { btn } from "@/lib/button-styles"
-import { getCustomerBookings } from "@/lib/Action/booking-actions"
+import {
+  cancelCustomerBooking,
+  getCustomerBookings,
+} from "@/lib/Action/booking-actions"
 import { cn } from "@/lib/utils"
 import { PageHeader } from "@/components/Dashboard/page-header"
 import { BookingsList } from "@/components/Dashboard/bookings-list"
@@ -48,7 +51,7 @@ const Bookings = async () => {
           </Button>
         }
       />
-      <BookingsList bookings={sorted} />
+      <BookingsList bookings={sorted} onCancelRequest={cancelCustomerBooking} />
     </div>
   )
 }

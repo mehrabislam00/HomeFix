@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LayoutGrid, LogOut, User } from "lucide-react"
@@ -12,9 +12,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { authClient } from "@/lib/auth-client"
+import { getUnreadNotificationCount } from "@/lib/Action/notification-actions"
 import type { SessionUser } from "@/lib/auth-session"
 import { dashboardHref } from "@/lib/dashboard-config"
 import { initialsOf } from "@/lib/dashboard-data"
+import { NOTIFICATIONS_UPDATED_EVENT } from "@/lib/notification-types"
 import { cn } from "@/lib/utils"
 
 const itemClass =
@@ -46,8 +48,36 @@ export function UserMenu({ user }: { user: SessionUser }) {
   const [openedOn, setOpenedOn] = useState<string | null>(null)
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState("")
+  const [unreadCount, setUnreadCount] = useState(0)
   const open = openedOn === pathname
   const dashboard = dashboardHref(user.role)
+
+  const refreshUnreadCount = useCallback(async () => {
+    const result = await getUnreadNotificationCount()
+    if (result.ok) setUnreadCount(result.unreadCount)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    const refresh = async () => {
+      if (document.visibilityState !== "visible") return
+      const result = await getUnreadNotificationCount()
+      if (active && result.ok) setUnreadCount(result.unreadCount)
+    }
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") void refresh()
+    }
+    void refresh()
+    const interval = window.setInterval(refresh, 30_000)
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, handleVisibility)
+    document.addEventListener("visibilitychange", handleVisibility)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, handleVisibility)
+      document.removeEventListener("visibilitychange", handleVisibility)
+    }
+  }, [user.role])
 
   async function handleSignOut() {
     setSigningOut(true)
@@ -72,7 +102,10 @@ export function UserMenu({ user }: { user: SessionUser }) {
   return (
     <Popover
       open={open}
-      onOpenChange={(next) => setOpenedOn(next ? pathname : null)}
+      onOpenChange={(next) => {
+        setOpenedOn(next ? pathname : null)
+        if (next) void refreshUnreadCount()
+      }}
     >
       <PopoverTrigger
         aria-label="Open account menu"
@@ -115,6 +148,14 @@ export function UserMenu({ user }: { user: SessionUser }) {
               className="size-[18px] text-sage-deep transition-colors group-hover:text-forest"
             />
             Dashboard
+            {unreadCount > 0 && (
+              <span
+                aria-label={`${unreadCount} unread notifications`}
+                className="ml-auto inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] leading-none font-bold text-white shadow-sm transition-[opacity,transform] duration-200 motion-reduce:transition-none"
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </Link>
           <Link
             href={`${dashboard}/profile`}
