@@ -1,8 +1,8 @@
-import { redirect } from "next/navigation";
+import { redirect } from "next/navigation"
 
-/** /admin has no landing page of its own — send visitors to the admin login. */
+/** /admin is a short alias for the protected admin dashboard. */
 const Admin = () => {
-  redirect("/admin/login");
-};
+  redirect("/admin-dashboard")
+}
 
-export default Admin;
+export default Admin

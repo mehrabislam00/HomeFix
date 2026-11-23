@@ -1,7 +1,8 @@
-import { revalidatePath } from "next/cache"
+import { revalidatePath, unstable_cache, updateTag } from "next/cache"
 import { headers } from "next/headers"
 
 import { auth } from "@/lib/auth"
+import { profileCacheTag } from "@/lib/cache-tags"
 import {
   deleteProfileAvatar,
   InvalidProfileAvatarError,
@@ -40,6 +41,8 @@ type ApiUser = {
   updatedAt?: unknown
   matchedCount?: unknown
 }
+
+class ProfileVerificationError extends Error {}
 
 function isRecord(value: unknown): value is ApiUser {
   return typeof value === "object" && value !== null
@@ -112,24 +115,32 @@ export async function getProfileSession(role: ProfileRole) {
 
 export async function loadProfile(
   role: ProfileRole,
-  fetchProfile: (id: string) => Promise<unknown>,
-  session: { user: { id: string; name: string; email: string; image?: string | null } }
+  session: {
+    user: { id: string; name: string; email: string; image?: string | null }
+  }
 ): Promise<ProfileLoadResult> {
   try {
-    const body: unknown = await fetchProfile(session.user.id)
-    if (!isRecord(body)) {
-      throw new Error("Profile API returned an invalid user.")
-    }
-
-    if (apiUserId(body) !== session.user.id || body.role !== role) {
-      return {
-        ok: false,
-        unauthorized: true,
-        redirectTo: "/login",
-        error: `Your ${role} profile could not be verified.`,
-      }
-    }
-
+    const userId = session.user.id
+    const cachedProfile = unstable_cache(
+      async () => {
+        const response = await fetch(profileEndpoint(role, userId), {
+          cache: "no-store",
+        })
+        const body = await readProfileResponse(response)
+        if (!isRecord(body)) {
+          throw new Error("Profile API returned an invalid user.")
+        }
+        if (apiUserId(body) !== userId || body.role !== role) {
+          throw new ProfileVerificationError(
+            `Your ${role} profile could not be verified.`
+          )
+        }
+        return body
+      },
+      ["profile", role, userId],
+      { revalidate: 300, tags: [profileCacheTag(role, userId)] }
+    )
+    const body = await cachedProfile()
     const email = asOptionalString(body.email) ?? session.user.email
     const customer: Customer = {
       name: asOptionalString(body.name) ?? session.user.name,
@@ -146,6 +157,14 @@ export async function loadProfile(
 
     return { ok: true, customer }
   } catch (error) {
+    if (error instanceof ProfileVerificationError) {
+      return {
+        ok: false,
+        unauthorized: true,
+        redirectTo: "/login",
+        error: error.message,
+      }
+    }
     console.error(`Unable to load ${role} profile.`, error)
     return {
       ok: false,
@@ -227,6 +246,7 @@ export async function saveProfile(
       }
     }
 
+    updateTag(profileCacheTag(role, userId))
     revalidatePath(DASHBOARD_PATH[role])
     revalidatePath(`${DASHBOARD_PATH[role]}/profile`)
     return { ok: true, image: uploadedAvatar?.image }

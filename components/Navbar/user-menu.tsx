@@ -12,6 +12,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { authClient } from "@/lib/auth-client"
+import { invalidateCurrentProfileCache } from "@/lib/Action/users"
 import { getUnreadNotificationCount } from "@/lib/Action/notification-actions"
 import type { SessionUser } from "@/lib/auth-session"
 import { dashboardHref } from "@/lib/dashboard-config"
@@ -84,6 +85,12 @@ export function UserMenu({ user }: { user: SessionUser }) {
     setSignOutError("")
 
     try {
+      try {
+        await invalidateCurrentProfileCache()
+      } catch (error) {
+        console.error("Unable to clear the signed-in profile cache.", error)
+      }
+
       const { error } = await authClient.signOut()
       if (error) {
         setSignOutError(error.message || "Unable to log out.")

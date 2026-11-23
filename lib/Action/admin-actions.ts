@@ -1,6 +1,6 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, updateTag } from "next/cache"
 import { headers } from "next/headers"
 
 import { auth } from "@/lib/auth"
@@ -17,6 +17,11 @@ import {
   type UserStatus,
 } from "@/lib/admin-data"
 import { serviceImageForCategory } from "@/lib/services-data"
+import {
+  profileCacheTag,
+  publicServiceCatalogMutationTags,
+  publicServiceMutationTags,
+} from "@/lib/cache-tags"
 import type { Customer } from "@/lib/dashboard-data"
 import type {
   ProfileLoadResult,
@@ -300,7 +305,8 @@ async function mutateAdmin(
   path: string,
   method: "PATCH" | "DELETE",
   body?: Record<string, unknown>,
-  revalidate: string[] = []
+  revalidate: string[] = [],
+  cacheTags: string[] = []
 ): Promise<AdminMutationResult> {
   try {
     const adminId = await getAdminId()
@@ -309,6 +315,7 @@ async function mutateAdmin(
       ...(body ? { body: JSON.stringify(body) } : {}),
     })
     revalidateAdminData(...revalidate)
+    for (const tag of cacheTags) updateTag(tag)
     return { ok: true }
   } catch (error) {
     console.error(`Unable to ${label}.`, error)
@@ -536,7 +543,8 @@ export async function updateAdminCustomer(
     `/customers/${encodeURIComponent(customerId)}`,
     "PATCH",
     values,
-    ["users"]
+    ["users"],
+    [profileCacheTag("customer", customerId)]
   )
 }
 
@@ -548,7 +556,8 @@ export async function deleteAdminCustomer(
     `/customers/${encodeURIComponent(customerId)}`,
     "DELETE",
     undefined,
-    ["users"]
+    ["users"],
+    [profileCacheTag("customer", customerId)]
   )
 }
 
@@ -601,7 +610,8 @@ export async function updateAdminTechnician(
     `/technicians/${encodeURIComponent(technicianId)}`,
     "PATCH",
     values,
-    ["users"]
+    ["users"],
+    [profileCacheTag("technician", technicianId)]
   )
 }
 
@@ -613,7 +623,11 @@ export async function deleteAdminTechnician(
     `/technicians/${encodeURIComponent(technicianId)}`,
     "DELETE",
     undefined,
-    ["users", "approvals"]
+    ["users", "approvals"],
+    [
+      profileCacheTag("technician", technicianId),
+      ...publicServiceCatalogMutationTags(),
+    ]
   )
 }
 
@@ -633,7 +647,8 @@ export async function updateAdminUser(
     `/users/${encodeURIComponent(userId)}`,
     "PATCH",
     values,
-    ["users"]
+    ["users"],
+    [profileCacheTag("customer", userId), profileCacheTag("technician", userId)]
   )
 }
 
@@ -661,7 +676,12 @@ export async function deleteAdminUser(
     `/users/${encodeURIComponent(userId)}`,
     "DELETE",
     undefined,
-    ["users"]
+    ["users"],
+    [
+      profileCacheTag("customer", userId),
+      profileCacheTag("technician", userId),
+      ...publicServiceCatalogMutationTags(),
+    ]
   )
 }
 
@@ -783,7 +803,8 @@ export async function updateAdminService(
     `/services/${encodeURIComponent(serviceId)}`,
     "PATCH",
     values,
-    ["approvals"]
+    ["approvals"],
+    publicServiceMutationTags(serviceId)
   )
 }
 
@@ -799,7 +820,8 @@ export async function decideAdminService(
     `/services/${encodeURIComponent(serviceId)}/approval`,
     "PATCH",
     { approvalStatus: decision },
-    ["approvals"]
+    ["approvals"],
+    publicServiceMutationTags(serviceId)
   )
 }
 
@@ -811,7 +833,8 @@ export async function deleteAdminService(
     `/services/${encodeURIComponent(serviceId)}`,
     "DELETE",
     undefined,
-    ["approvals"]
+    ["approvals"],
+    publicServiceMutationTags(serviceId)
   )
 }
 

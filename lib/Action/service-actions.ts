@@ -1,7 +1,13 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, unstable_cache, updateTag } from "next/cache"
 
+import {
+  PUBLIC_SERVICE_LIST_TAG,
+  PUBLIC_SERVICE_REVALIDATE_SECONDS,
+  publicServiceCacheTag,
+  publicServiceDetailCacheTags,
+} from "@/lib/cache-tags"
 import { getProfileSession } from "@/lib/Action/profile-action-utils"
 import {
   normalizeService,
@@ -52,20 +58,45 @@ async function servicesAt(path: string): Promise<ServiceListing[]> {
   return unwrapCollection(result, ["services", "results"]).map(normalizeService)
 }
 
+function cachedPublicServices(path: string) {
+  return unstable_cache(() => servicesAt(path), ["public-service-list", path], {
+    revalidate: PUBLIC_SERVICE_REVALIDATE_SECONDS,
+    tags: [PUBLIC_SERVICE_LIST_TAG],
+  })()
+}
+
+function cachedPublicService(serviceId: string) {
+  return unstable_cache(
+    async () =>
+      normalizeService(
+        await requestServiceBookingApi(
+          `/services/${encodeURIComponent(serviceId)}`
+        )
+      ),
+    ["public-service-detail", serviceId],
+    {
+      revalidate: PUBLIC_SERVICE_REVALIDATE_SECONDS,
+      tags: publicServiceDetailCacheTags(serviceId),
+    }
+  )()
+}
+
+function invalidatePublicServiceCache(serviceId?: string) {
+  updateTag(PUBLIC_SERVICE_LIST_TAG)
+  if (serviceId) updateTag(publicServiceCacheTag(serviceId))
+}
+
 export async function getAvailableServices(
   category?: string
 ): Promise<ServiceListing[]> {
   const path = category
     ? `/services/category/${encodeURIComponent(category)}`
     : "/services"
-  return servicesAt(path)
+  return cachedPublicServices(path)
 }
 
 export async function getServiceById(id: string): Promise<ServiceListing> {
-  const result = await requestServiceBookingApi(
-    `/services/${encodeURIComponent(id)}`
-  )
-  return normalizeService(result)
+  return cachedPublicService(id)
 }
 
 export async function getTechnicianServiceListings(): Promise<
@@ -127,6 +158,7 @@ export async function createTechnicianService(
         }),
       }
     )
+    invalidatePublicServiceCache()
     revalidatePath("/")
     revalidatePath("/services")
     revalidatePath("/technician-dashboard")
@@ -171,6 +203,7 @@ export async function updateTechnicianService(
         }),
       }
     )
+    invalidatePublicServiceCache(serviceId)
     revalidatePath("/")
     revalidatePath("/services")
     revalidatePath("/technician-dashboard")
@@ -212,6 +245,7 @@ export async function updateTechnicianServiceAvailability(
         }),
       }
     )
+    invalidatePublicServiceCache(serviceId)
     revalidatePath("/")
     revalidatePath("/services")
     revalidatePath("/technician-dashboard")
@@ -245,6 +279,7 @@ export async function deleteTechnicianService(
         body: JSON.stringify({ technicianId }),
       }
     )
+    invalidatePublicServiceCache(serviceId)
     revalidatePath("/")
     revalidatePath("/services")
     revalidatePath("/technician-dashboard")

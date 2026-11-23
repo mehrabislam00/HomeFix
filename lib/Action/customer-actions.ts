@@ -4,18 +4,10 @@ import type { ProfileResult, ProfileValues } from "@/lib/profile-types"
 import {
   getProfileSession,
   loadProfile,
-  profileEndpoint,
   readProfileResponse,
   saveProfile,
   userEndpoint,
 } from "./profile-action-utils"
-
-async function fetchCustomerProfile(id: string): Promise<unknown> {
-  const response = await fetch(profileEndpoint("customer", id), {
-    cache: "no-store",
-  })
-  return readProfileResponse(response)
-}
 
 async function updateCustomerProfileRecord(
   id: string,
@@ -33,7 +25,7 @@ async function updateCustomerProfileRecord(
 export async function getCustomerProfile() {
   const access = await getProfileSession("customer")
   if (!access.ok) return access
-  return loadProfile("customer", fetchCustomerProfile, access.session)
+  return loadProfile("customer", access.session)
 }
 
 export async function updateCustomerProfile(
