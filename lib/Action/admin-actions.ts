@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from "next/cache"
 import { headers } from "next/headers"
 
 import { auth } from "@/lib/auth"
+import { authenticatedBackendFetch } from "@/lib/server-jwt"
 import {
   type AdminBooking,
   type AdminDashboardStats,
@@ -30,9 +31,6 @@ import type {
 } from "@/lib/profile-types"
 
 const ADMIN_PATH = "/admin-dashboard"
-const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
-).replace(/\/+$/, "")
 
 type ApiRecord = Record<string, unknown>
 type AdminMutationResult = { ok: true } | { ok: false; error: string }
@@ -252,17 +250,7 @@ async function requestAdminApi(
   init: RequestInit = {}
 ): Promise<unknown> {
   const apiPath = `/admin/${encodeURIComponent(adminId)}${path}`
-  const response = await fetch(
-    `${API_BASE_URL}${apiPath}`,
-    {
-      ...init,
-      headers: {
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
-        ...init.headers,
-      },
-      cache: "no-store",
-    }
-  )
+  const response = await authenticatedBackendFetch(apiPath, init)
   const body = await response.text()
   let data: unknown
   if (body) {

@@ -1,19 +1,19 @@
 "use server"
 
 import type { ProfileResult, ProfileValues } from "@/lib/profile-types"
+import { authenticatedBackendFetch } from "@/lib/server-jwt"
 import {
   getProfileSession,
   loadProfile,
   readProfileResponse,
   saveProfile,
-  userEndpoint,
 } from "./profile-action-utils"
 
 async function updateCustomerProfileRecord(
   id: string,
   values: Record<string, string>
 ): Promise<unknown> {
-  const response = await fetch(userEndpoint(id), {
+  const response = await authenticatedBackendFetch(`/users/${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(values),

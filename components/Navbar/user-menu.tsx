@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/popover"
 import { authClient } from "@/lib/auth-client"
 import { invalidateCurrentProfileCache } from "@/lib/Action/users"
+import { revokeBackendSignOut } from "@/lib/Action/auth-actions"
 import { getUnreadNotificationCount } from "@/lib/Action/notification-actions"
 import type { SessionUser } from "@/lib/auth-session"
 import { dashboardHref } from "@/lib/dashboard-config"
@@ -91,6 +92,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
         console.error("Unable to clear the signed-in profile cache.", error)
       }
 
+      await revokeBackendSignOut()
       const { error } = await authClient.signOut()
       if (error) {
         setSignOutError(error.message || "Unable to log out.")

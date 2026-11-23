@@ -10,7 +10,6 @@ import {
   unwrapCollection,
 } from "@/lib/service-booking-data"
 import { requestServiceBookingApi } from "@/lib/service-booking-api"
-import { paymentApiHeaders } from "@/lib/payment-api-signature"
 import type { BookingResult, BookingValues } from "@/lib/booking-types"
 import type { Booking } from "@/lib/dashboard-data"
 import type { ServiceListing } from "@/lib/service-booking-data"
@@ -66,11 +65,9 @@ export async function cancelCustomerBooking(
   }
 
   try {
-    const customerId = await userIdForRole("customer")
     const path = `/bookings/${encodeURIComponent(bookingId)}/cancel`
     await requestServiceBookingApi(path, {
       method: "PATCH",
-      headers: paymentApiHeaders("PATCH", path, "customer", customerId),
     })
     revalidatePath("/customer-dashboard")
     revalidatePath("/customer-dashboard/bookings")

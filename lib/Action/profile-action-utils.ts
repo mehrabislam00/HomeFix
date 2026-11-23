@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 
 import { auth } from "@/lib/auth"
 import { profileCacheTag } from "@/lib/cache-tags"
+import { exchangeAccessTokenForRequest, getAccessToken } from "@/lib/server-jwt"
 import {
   deleteProfileAvatar,
   InvalidProfileAvatarError,
@@ -43,6 +44,7 @@ type ApiUser = {
 }
 
 class ProfileVerificationError extends Error {}
+class ProfileAccessTokenExpiredError extends Error {}
 
 function isRecord(value: unknown): value is ApiUser {
   return typeof value === "object" && value !== null
@@ -121,26 +123,49 @@ export async function loadProfile(
 ): Promise<ProfileLoadResult> {
   try {
     const userId = session.user.id
-    const cachedProfile = unstable_cache(
-      async () => {
-        const response = await fetch(profileEndpoint(role, userId), {
-          cache: "no-store",
-        })
-        const body = await readProfileResponse(response)
-        if (!isRecord(body)) {
-          throw new Error("Profile API returned an invalid user.")
-        }
-        if (apiUserId(body) !== userId || body.role !== role) {
-          throw new ProfileVerificationError(
-            `Your ${role} profile could not be verified.`
-          )
-        }
-        return body
-      },
-      ["profile", role, userId],
-      { revalidate: 300, tags: [profileCacheTag(role, userId)] }
-    )
-    const body = await cachedProfile()
+    const loadCachedProfile = (accessToken: string) =>
+      unstable_cache(
+        async () => {
+          const response = await fetch(profileEndpoint(role, userId), {
+            cache: "no-store",
+            headers: { Authorization: `Bearer ${accessToken}` },
+          })
+          if (response.status === 401) {
+            throw new ProfileAccessTokenExpiredError(
+              "The backend access token expired."
+            )
+          }
+          const body = await readProfileResponse(response)
+          if (!isRecord(body)) {
+            throw new Error("Profile API returned an invalid user.")
+          }
+          if (apiUserId(body) !== userId || body.role !== role) {
+            throw new ProfileVerificationError(
+              `Your ${role} profile could not be verified.`
+            )
+          }
+          return body
+        },
+        ["profile", role, userId],
+        { revalidate: 300, tags: [profileCacheTag(role, userId)] }
+      )()
+
+    let accessToken = await getAccessToken()
+    if (!accessToken) {
+      accessToken = (await exchangeAccessTokenForRequest("/auth/token"))
+        .accessToken
+    }
+
+    let body: ApiUser
+    try {
+      body = await loadCachedProfile(accessToken)
+    } catch (error) {
+      if (!(error instanceof ProfileAccessTokenExpiredError)) throw error
+      accessToken = (await exchangeAccessTokenForRequest("/auth/refresh"))
+        .accessToken
+      body = await loadCachedProfile(accessToken)
+    }
+
     const email = asOptionalString(body.email) ?? session.user.email
     const customer: Customer = {
       name: asOptionalString(body.name) ?? session.user.name,
@@ -261,14 +286,20 @@ export async function saveProfile(
           },
         })
       } catch (rollbackError) {
-        console.error("Unable to roll back the authentication profile.", rollbackError)
+        console.error(
+          "Unable to roll back the authentication profile.",
+          rollbackError
+        )
       }
     }
     if (uploadedAvatar) {
       try {
         await deleteProfileAvatar(uploadedAvatar.image, userId)
       } catch (cleanupError) {
-        console.error("Unable to remove the failed profile photo upload.", cleanupError)
+        console.error(
+          "Unable to remove the failed profile photo upload.",
+          cleanupError
+        )
       }
     }
     if (error instanceof InvalidProfileAvatarError) {
@@ -291,7 +322,9 @@ export function userEndpoint(id: string): string {
   return `${API_BASE_URL}/users/${encodeURIComponent(id)}`
 }
 
-export async function readProfileResponse(response: Response): Promise<unknown> {
+export async function readProfileResponse(
+  response: Response
+): Promise<unknown> {
   if (!response.ok) {
     throw new Error(`Profile API returned HTTP ${response.status}.`)
   }

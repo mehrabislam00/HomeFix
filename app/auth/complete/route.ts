@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { exchangeAndStoreAccessToken } from "@/lib/server-jwt"
 import {
   destinationForRole,
   requiredRoleForPath,
@@ -27,6 +28,12 @@ export async function GET(request: NextRequest) {
       const response = NextResponse.redirect(loginUrl)
       response.cookies.delete("homefix-registration-role")
       return response
+    }
+
+    try {
+      await exchangeAndStoreAccessToken()
+    } catch (error) {
+      console.error("Unable to exchange the Better Auth session for JWT.", error)
     }
 
     const response = NextResponse.redirect(new URL(destination, request.url))

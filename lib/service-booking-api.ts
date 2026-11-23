@@ -1,3 +1,9 @@
+import "server-only"
+
+import {
+  authenticatedBackendFetch,
+} from "@/lib/server-jwt"
+
 const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
 ).replace(/\/+$/, "")
@@ -16,14 +22,33 @@ export async function requestServiceBookingApi(
   path: string,
   init: RequestInit = {}
 ): Promise<unknown> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
-      ...init.headers,
-    },
-    cache: "no-store",
-  })
+  const method = init.method?.toUpperCase()
+  const publicGet =
+    (!method || method === "GET") &&
+    (path === "/services" ||
+      path.startsWith("/services/category/") ||
+      /^\/services\/[^/]+$/.test(path))
+  const requiresJwt =
+    !publicGet &&
+    (path.startsWith("/users") ||
+      path.startsWith("/customers") ||
+      path.startsWith("/technicians") ||
+      path.startsWith("/bookings") ||
+      path.startsWith("/payments") ||
+      path.startsWith("/admin/") ||
+      path.startsWith("/services") ||
+      path === "/auth/logout")
+
+  const response = requiresJwt
+    ? await authenticatedBackendFetch(path, init)
+    : await fetch(`${API_BASE_URL}${path}`, {
+        ...init,
+        headers: {
+          ...(init.body ? { "Content-Type": "application/json" } : {}),
+          ...init.headers,
+        },
+        cache: "no-store",
+      })
 
   const body = await response.text()
   let data: unknown

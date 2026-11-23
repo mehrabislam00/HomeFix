@@ -13,7 +13,7 @@ export type StartPaymentResult =
   | { ok: true; checkoutUrl: string }
   | { ok: false; error: string; status: number }
 
-export type CheckoutAttemptStatus = "pending" | "failed" | "expired"
+export type CheckoutAttemptStatus = "pending" | "failed" | "expired" | "paid"
 
 export type PaymentStatistics = {
   totalPayments: number
@@ -315,6 +315,19 @@ export async function getCustomerCheckoutAttemptStatus(
           paymentIntent.last_payment_error))
     ) {
       return "failed"
+    }
+    if (
+      checkoutSession.status === "complete" &&
+      checkoutSession.payment_status === "paid" &&
+      paymentIntent?.status === "succeeded"
+    ) {
+      const confirmation = await requestServiceBookingApi(
+        `/payments/checkout/${encodeURIComponent(sessionId)}/confirm`,
+        { method: "POST" }
+      )
+      if (isRecord(confirmation) && confirmation.status === "paid") {
+        return "paid"
+      }
     }
     return "pending"
   } catch (error) {

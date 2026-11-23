@@ -57,7 +57,7 @@ export default async function PaymentSuccess({
       )
     }
   }
-  const state = confirmed
+  const state = confirmed || attemptStatus === "paid"
     ? "success"
     : attemptStatus === "failed"
       ? "failed"
